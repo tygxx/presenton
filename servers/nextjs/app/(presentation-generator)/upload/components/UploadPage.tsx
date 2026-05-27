@@ -206,9 +206,9 @@ const UploadPage = () => {
       return true;
     } catch (error: any) {
       notify.error(
-        "Image provider unavailable",
+        "图像服务商不可用",
         error?.message ||
-        `Unable to reach ${selectedProvider} right now. Please check your API key/settings and try again.`
+        `当前无法访问 ${selectedProvider}，请检查 API key 或配置后重试。`
       );
       return false;
     }
@@ -221,19 +221,19 @@ const UploadPage = () => {
   const validateConfiguration = (): boolean => {
     if (!config.language) {
       trackUploadValidationFailure("language_missing");
-      notify.warning("Language required", "Please select a language.");
+      notify.warning("需要选择语言", "请先选择一种语言。");
       return false;
     }
 
     if (files.length > 0 && config.language === LanguageType.Auto) {
       trackUploadValidationFailure("language_auto_with_documents");
-      notify.warning("Language required", "Please choose a language before processing uploaded documents.");
+      notify.warning("需要选择语言", "处理上传的文档前请先选择具体的语言。");
       return false;
     }
 
     if (!config.prompt.trim() && files.length === 0) {
       trackUploadValidationFailure("prompt_or_document_missing");
-      notify.warning("Input required", "Provide a prompt or upload at least one document.");
+      notify.warning("需要输入内容", "请填写提示词或上传至少一份文档。");
       return false;
     }
     return true;
@@ -272,10 +272,10 @@ const UploadPage = () => {
   const handleDocumentProcessing = async () => {
     setLoadingState({
       isLoading: true,
-      message: "Processing documents...",
+      message: "正在处理文档…",
       showProgress: true,
       duration: 90,
-      extra_info: files.length > 0 ? "It might take a few minutes for large documents." : "",
+      extra_info: files.length > 0 ? "大型文档可能需要几分钟时间。" : "",
     });
 
     let documents = [];
@@ -319,7 +319,7 @@ const UploadPage = () => {
   const handleDirectPresentationGeneration = async () => {
     setLoadingState({
       isLoading: true,
-      message: "Generating outlines...",
+      message: "正在生成大纲…",
       showProgress: true,
       duration: 30,
     });
@@ -364,8 +364,8 @@ const UploadPage = () => {
       showProgress: false,
     });
     notify.error(
-      "Generation failed",
-      error.message || "Something went wrong while starting your presentation."
+      "生成失败",
+      error.message || "启动演示文稿生成时出错，请重试。"
     );
   };
 
@@ -398,7 +398,7 @@ const UploadPage = () => {
           </div>
         </div>
         <div className="p-4 ">
-          <h3 className="text-sm font-medium text-[#333333] mb-2">Attachments (optional)</h3>
+          <h3 className="text-sm font-medium text-[#333333] mb-2">附件（可选）</h3>
           <SupportingDoc
             files={[...files]}
             onFilesChange={setFiles}
@@ -413,7 +413,7 @@ const UploadPage = () => {
             }}
             className="w-fit mr-0 ml-auto rounded-[28px] flex items-center justify-center py-5 px-4  text-[#101323] font-syne font-semibold text-xs  "
           >
-            <span>Get Started</span>
+            <span>开始生成</span>
             <ChevronRight className="!w-5 !h-5 " />
           </Button>
         </div>

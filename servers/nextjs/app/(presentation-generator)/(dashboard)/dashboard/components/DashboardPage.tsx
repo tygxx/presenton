@@ -100,13 +100,13 @@ const DashboardPage: React.FC = () => {
       <div className="sticky top-0 right-0 z-50 py-[28px] backdrop-blur mb-2">
         <div className="flex items-center justify-between">
           <h3 className="text-[28px] tracking-[-0.84px] font-syne font-normal text-[#101828] flex items-center gap-2">
-            Slide Presentation
+            幻灯片演示文稿
           </h3>
         </div>
       </div>
       <section className="relative z-10 overflow-visible  ">
         <h2 className="font-syne text-base bg-transparent font-medium pb-3.5  text-[#333333] ">
-          Actions
+          快捷操作
         </h2>
         <Link
           href="/upload"
@@ -117,30 +117,30 @@ const DashboardPage: React.FC = () => {
             })
           }
           className="group/action bg-white z-50 mt-2  relative  block w-[304px] max-w-full overflow-visible rounded-[10.8px] outline-none focus-visible:ring-2 focus-visible:ring-[#7A5AF8] focus-visible:ring-offset-4 cursor-pointer"
-          aria-label="Create presentation"
+          aria-label="创建演示文稿"
         >
           <FloatingActionCards />
 
           <img
             src="/create_presentation_bg.png"
-            alt="Background of the create presentation card"
+            alt="创建演示文稿卡片背景"
             className="relative bg-white z-10 h-[89.983px] w-[304px] max-w-full rounded-[10.8px] object-cover"
           />
           <span className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 text-center font-syne text-sm font-medium text-[#191919]">
-            Create Presentation
+            创建演示文稿
           </span>
         </Link>
       </section>
       <section className="relative z-10 mt-12">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-syne text-base font-medium  text-[#333333] ">
-            Decks
+            演示集
           </h2>
           <button
             type="button"
             className="flex h-8 w-8 items-center justify-center rounded-full text-[#2F3033] transition-colors hover:bg-[#F3F3F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A5AF8]"
-            title="Toggle deck sort order"
-            aria-label="Toggle deck sort order"
+            title="切换排序方向"
+            aria-label="切换排序方向"
             onClick={() =>
               setDeckSortDirection((current) =>
                 current === "desc" ? "asc" : "desc"

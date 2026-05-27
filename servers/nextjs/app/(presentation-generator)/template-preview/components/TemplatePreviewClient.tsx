@@ -54,16 +54,16 @@ const GroupLayoutPreview = () => {
     if (!customTemplateId) return;
 
     const confirmed = window.confirm(
-      "Are you sure you want to delete this template? This action cannot be undone."
+      "确定要删除该模板吗？此操作无法撤销。"
     );
     if (!confirmed) return;
 
     const success = await TemplateService.deleteCustomTemplate(customTemplateId);
     if (success.success) {
-      notify.success("Template deleted", "The template was deleted successfully.");
+      notify.success("模板已删除", "模板已成功删除。");
       router.push("/templates");
     } else {
-      notify.error("Could not delete template", "Something went wrong while deleting the template.");
+      notify.error("无法删除模板", "删除模板时出错，请重试。");
     }
   };
 
@@ -73,7 +73,7 @@ const GroupLayoutPreview = () => {
         <Header />
         <div className="flex items-center justify-center py-24">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-gray-600">Compiling templates...</span>
+          <span className="ml-3 text-gray-600">正在编译模板…</span>
         </div>
       </div>
     );
@@ -84,11 +84,11 @@ const GroupLayoutPreview = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex flex-col items-center justify-center py-24">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error loading template</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">模板加载失败</h2>
           <p className="text-gray-600 mb-4">{customError}</p>
           <Button onClick={() => router.push("/templates")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Templates
+            返回模板列表
           </Button>
         </div>
       </div>
@@ -104,18 +104,18 @@ const GroupLayoutPreview = () => {
         <Header />
         <div className="flex flex-col items-center justify-center py-24">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Template not found
+            未找到模板
           </h2>
           <Button onClick={() => router.push("/templates")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Templates
+            返回模板列表
           </Button>
         </div>
       </div>
     );
   }
 
-  const templateName = isCustom ? customTemplate?.template.name || "Custom Template" : staticGroup?.name || "";
+  const templateName = isCustom ? customTemplate?.template.name || "自定义模板" : staticGroup?.name || "";
   const templateDescription = isCustom
     ? customTemplate?.template.description || ""
     : staticGroup?.description || "";
@@ -145,7 +145,7 @@ const GroupLayoutPreview = () => {
                   className="flex items-center gap-2 border-red-200 text-red-700 hover:bg-red-50"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Template
+                  删除模板
                 </Button>
               </div>
             )}
@@ -156,7 +156,7 @@ const GroupLayoutPreview = () => {
               <h1 className="text-[64px] font-bold text-gray-900">{templateName}</h1>
               {isCustom && (
                 <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-sm">
-                  Custom
+                  自定义
                 </span>
               )}
             </div>

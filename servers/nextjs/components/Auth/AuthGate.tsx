@@ -39,7 +39,7 @@ export default function AuthGate() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("reason") === "unauthorized") {
       if (status.configured && !status.authenticated) {
-        notify.error("Unauthorized", "Sign in to view this page.", {
+        notify.error("未登录", "请先登录后再访问该页面。", {
           id: "auth-unauthorized-redirect",
           duration: 5000,
         });
@@ -59,7 +59,7 @@ export default function AuthGate() {
       });
 
       if (!response.ok) {
-        throw new Error("Could not load login state");
+        throw new Error("无法获取登录状态");
       }
 
       const data = (await response.json()) as AuthStatus;
@@ -71,8 +71,8 @@ export default function AuthGate() {
     } catch (fetchError) {
       console.error(fetchError);
       notify.error(
-        "Could not load login",
-        "We could not connect to the login service. Please refresh and try again."
+        "登录服务不可用",
+        "无法连接到登录服务，请刷新页面后重试。"
       );
     } finally {
       setIsLoading(false);
@@ -85,24 +85,24 @@ export default function AuthGate() {
     const cleanedUsername = username.trim();
     if (cleanedUsername.length < 3) {
       notify.warning(
-        "Username too short",
-        "Your username must be at least 3 characters."
+        "用户名过短",
+        "用户名至少需要 3 个字符。"
       );
       return;
     }
 
     if (password.length < 6) {
       notify.warning(
-        "Password too short",
-        "Your password must be at least 6 characters."
+        "密码过短",
+        "密码至少需要 6 个字符。"
       );
       return;
     }
 
     if (isSetupMode && password !== confirmPassword) {
       notify.warning(
-        "Passwords do not match",
-        "Make sure both password fields match before continuing."
+        "两次密码不一致",
+        "请确认两次输入的密码相同后再继续。"
       );
       return;
     }
@@ -130,15 +130,15 @@ export default function AuthGate() {
         const detail = formatFastApiDetail(payload?.detail);
         if (response.status === 401) {
           notify.error(
-            "Sign-in failed",
+            "登录失败",
             detail === UNAUTHORIZED_DETAIL
-              ? "The username or password is incorrect. Please try again."
+              ? "用户名或密码错误，请重试。"
               : detail
           );
         } else {
           notify.error(
-            isSetupMode ? "Could not create account" : "Sign-in failed",
-            detail || "Something went wrong. Please try again."
+            isSetupMode ? "创建账号失败" : "登录失败",
+            detail || "出错了，请稍后重试。"
           );
         }
         return;
@@ -152,7 +152,7 @@ export default function AuthGate() {
         });
         setPassword("");
         setConfirmPassword("");
-        notify.success("Account created", "Sign in with your new username and password to continue.", {
+        notify.success("账号已创建", "请使用新设置的用户名和密码登录以继续。", {
           duration: 6000,
         });
         return;
@@ -166,14 +166,14 @@ export default function AuthGate() {
       setPassword("");
       setConfirmPassword("");
       notify.success(
-        "Signed in",
-        "Welcome back. Loading your workspace."
+        "登录成功",
+        "欢迎回来，正在加载工作区…"
       );
     } catch (submitError) {
       console.error(submitError);
       notify.error(
-        "Login unavailable",
-        "The login service is unavailable right now. Please try again in a moment."
+        "登录服务不可用",
+        "登录服务当前不可用，请稍后重试。"
       );
     } finally {
       setIsSubmitting(false);
@@ -188,7 +188,7 @@ export default function AuthGate() {
             <img src="/Logo.png" alt="Presenton" className="mx-auto mb-5 h-12 opacity-95" />
             <div className="mx-auto mb-4 h-1 w-16 rounded-full bg-[#7C51F8]" />
             <h1 className="font-syne text-lg font-semibold text-black">Presenton</h1>
-            <p className="mt-3 font-syne text-sm text-[#000000CC]">Preparing your workspace…</p>
+            <p className="mt-3 font-syne text-sm text-[#000000CC]">正在准备工作区…</p>
             <div className="mt-6 flex justify-center gap-1.5">
               <span className="h-2 w-2 animate-pulse rounded-full bg-[#5146E5]" />
               <span
@@ -224,10 +224,10 @@ export default function AuthGate() {
             </div>
             <div>
               <p className="font-syne text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A5AF8]">
-                Secure instance
+                安全实例
               </p>
               <h1 className="mt-1 font-syne text-2xl font-semibold leading-tight text-black sm:text-[26px]">
-                {isSetupMode ? "Create your admin login" : "Sign in to continue"}
+                {isSetupMode ? "创建管理员账号" : "登录以继续"}
               </h1>
             </div>
           </div>
@@ -235,21 +235,21 @@ export default function AuthGate() {
 
         <p className="font-syne text-base text-[#000000CC] sm:text-lg">
           {isSetupMode
-            ? "One-time setup for this deployment. You will use the same username and password on future visits."
-            : "This deployment is protected. Enter your credentials to open the app."}
+            ? "首次部署一次性设置，后续访问将使用同一组用户名和密码。"
+            : "该实例已启用访问保护，请输入凭据以打开应用。"}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div className="space-y-2">
             <label htmlFor="username" className="block font-syne text-sm font-medium text-black">
-              Username
+              用户名
             </label>
             <input
               id="username"
               autoComplete="username"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              placeholder="your-admin-user"
+              placeholder="例如：admin"
               className="w-full rounded-[11px] border border-[#EDEEEF] bg-white px-4 py-3 font-syne text-sm text-black outline-none transition placeholder:text-[#999999] focus:border-[#a49cfc] focus:ring-2 focus:ring-[#5146E5]/20"
               disabled={isSubmitting}
             />
@@ -257,7 +257,7 @@ export default function AuthGate() {
 
           <div className="space-y-2">
             <label htmlFor="password" className="block font-syne text-sm font-medium text-black">
-              Password
+              密码
             </label>
             <input
               id="password"
@@ -265,7 +265,7 @@ export default function AuthGate() {
               autoComplete={isSetupMode ? "new-password" : "current-password"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="At least 6 characters"
+              placeholder="至少 6 个字符"
               className="w-full rounded-[11px] border border-[#EDEEEF] bg-white px-4 py-3 font-syne text-sm text-black outline-none transition placeholder:text-[#999999] focus:border-[#a49cfc] focus:ring-2 focus:ring-[#5146E5]/20"
               disabled={isSubmitting}
             />
@@ -274,7 +274,7 @@ export default function AuthGate() {
           {isSetupMode ? (
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="block font-syne text-sm font-medium text-black">
-                Confirm password
+                确认密码
               </label>
               <input
                 id="confirmPassword"
@@ -282,7 +282,7 @@ export default function AuthGate() {
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="Re-enter your password"
+                placeholder="再次输入密码"
                 className="w-full rounded-[11px] border border-[#EDEEEF] bg-white px-4 py-3 font-syne text-sm text-black outline-none transition placeholder:text-[#999999] focus:border-[#a49cfc] focus:ring-2 focus:ring-[#5146E5]/20"
                 disabled={isSubmitting}
               />
@@ -291,7 +291,7 @@ export default function AuthGate() {
 
           {!isSetupMode && status.configured ? (
             <p className="font-syne text-sm text-[#494A4D]">
-              Setup is complete for this instance. Use the username and password you configured.
+              该实例已完成初始化，请使用此前设置的用户名和密码登录。
             </p>
           ) : null}
 
@@ -302,11 +302,11 @@ export default function AuthGate() {
           >
             {isSubmitting
               ? isSetupMode
-                ? "Saving credentials…"
-                : "Signing in…"
+                ? "正在保存凭据…"
+                : "正在登录…"
               : isSetupMode
-                ? "Create account"
-                : "Sign in"}
+                ? "创建账号"
+                : "登录"}
           </button>
         </form>
       </section>

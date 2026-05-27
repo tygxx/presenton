@@ -72,7 +72,7 @@ const SlideCountSelect: React.FC<{
         }
     };
 
-    const displayLabel = value ? `${value} slides` : "Auto slides";
+    const displayLabel = value ? `${value} 张幻灯片` : "自动张数";
 
     return (
         <Popover open={open} onOpenChange={onOpenChange}>
@@ -123,7 +123,7 @@ const SlideCountSelect: React.FC<{
                             placeholder="--"
                             className="h-8 w-16 px-2 text-sm"
                         />
-                        <span className="text-sm font-medium">slides</span>
+                        <span className="text-sm font-medium">张
                     </div>
                 </div>
                 <Command>
@@ -132,7 +132,7 @@ const SlideCountSelect: React.FC<{
                             {SLIDE_OPTIONS.map((option) => (
                                 <CommandItem
                                     key={option}
-                                    value={`${option} slides`}
+                                    value={`${option} 张幻灯片`}
                                     role="option"
                                     onSelect={() => {
                                         onValueChange(option);
@@ -147,7 +147,7 @@ const SlideCountSelect: React.FC<{
                                             value === option ? "opacity-100" : "opacity-0"
                                         )}
                                     />
-                                    {option} slides
+                                    {option} 张
                                 </CommandItem>
                             ))}
                         </CommandGroup>
@@ -179,7 +179,7 @@ const LanguageSelect: React.FC<{
                 <Languages className="w-3.5 h-3.5" />
                 <span className="w-[40px] text-left">
                     <span className="text-xs font-medium truncate block">
-                        {value || "Select language"}
+                        {value || "选择语言"}
                     </span>
                 </span>
                 <ChevronUp className="ml-2 h-4 w-4 shrink-0" />
@@ -189,11 +189,11 @@ const LanguageSelect: React.FC<{
         <PopoverContent className="w-[300px] p-0" align="end">
             <Command>
                 <CommandInput
-                    placeholder="Search language..."
+                    placeholder="搜索语言…"
                     className="font-instrument_sans"
                 />
                 <CommandList>
-                    <CommandEmpty>No language found.</CommandEmpty>
+                    <CommandEmpty>未找到语言。</CommandEmpty>
                     <CommandGroup>
                         {Object.values(LanguageType).map((language) => (
                             <CommandItem

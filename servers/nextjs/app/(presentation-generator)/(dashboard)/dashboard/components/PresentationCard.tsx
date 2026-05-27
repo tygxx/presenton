@@ -96,13 +96,13 @@ export const PresentationCard = ({
         presentation_id: id,
         slide_count: presentation?.slides?.length || 0,
       });
-      notify.success("Presentation deleted", "The presentation was removed from your dashboard.");
+      notify.success("演示文稿已删除", "该演示文稿已从你的仪表盘中移除。");
       setShowDeleteDialog(false);
       if (onDeleted) {
         onDeleted(id);
       }
     } else {
-      notify.error("Could not delete presentation", response?.message || "Something went wrong while deleting the presentation.");
+      notify.error("无法删除演示文稿", response?.message || "删除演示文稿时出错，请重试。");
     }
     setIsDeleting(false);
   };
@@ -151,7 +151,7 @@ export const PresentationCard = ({
                     setShowDeleteDialog(true);
                   }}
                 >
-                  <p>Delete</p>
+                  <p>删除</p>
                   <Trash className="w- h-4 text-red-500" />
                 </button>
               </PopoverContent>
@@ -183,12 +183,12 @@ export const PresentationCard = ({
                 <AlertTriangle className="h-6 w-6 text-red-500" />
               </div>
               <h3 className="mb-2 text-lg font-semibold text-[#191919]">
-                Delete Presentation?
+                删除演示文稿？
               </h3>
               <p className="text-sm leading-relaxed text-gray-500">
-                You are about to delete{" "}
-                <span className="font-medium text-gray-700">&quot;{title}&quot;</span>.
-                This action cannot be undone.
+                即将删除{" "}
+                <span className="font-medium text-gray-700">&quot;{title}&quot;</span>
+                ，此操作无法撤销。
               </p>
             </div>
             <div className="flex border-t border-gray-100">
@@ -197,7 +197,7 @@ export const PresentationCard = ({
                 disabled={isDeleting}
                 className="flex-1 px-4 py-3.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Cancel
+                取消
               </button>
               <button
                 onClick={() => void handleDelete()}
@@ -207,10 +207,10 @@ export const PresentationCard = ({
                 {isDeleting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Deleting...
+                    正在删除…
                   </>
                 ) : (
-                  "Delete"
+                  "删除"
                 )}
               </button>
             </div>

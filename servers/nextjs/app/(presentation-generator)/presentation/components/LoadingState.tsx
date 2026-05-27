@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 const LoadingState = () => {
     const [currentTipIndex, setCurrentTipIndex] = useState(0);
     const tips = [
-        "We're crafting your presentation with AI magic ✨",
-        "Analyzing your content for perfect slides 📊",
-        "Organizing information for maximum impact 🎯",
-        "Adding visual elements to engage your audience 🎨",
-        "Almost there! Putting final touches ⚡️"
+        "AI 正在精心打造你的演示文稿 ✨",
+        "正在分析内容，打造完美的幻灯片 📊",
+        "正在组织信息以达到最佳效果 🎯",
+        "正在添加视觉元素，让观众更有共鸣 🎨",
+        "快好了！正在做最后润色 ⚡️"
     ];
 
     useEffect(() => {
@@ -27,10 +27,10 @@ const LoadingState = () => {
                         <div
                             className="presentation-loader-dots shrink-0"
                             role="status"
-                            aria-label="Loading"
+                            aria-label="加载中"
                         />
                         <h2 className="text-2xl font-semibold text-gray-800">
-                            Creating Your Presentation
+                            正在创建你的演示文稿
                         </h2>
                     </div>
                     <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-xl shadow-sm p-6 mb-4">

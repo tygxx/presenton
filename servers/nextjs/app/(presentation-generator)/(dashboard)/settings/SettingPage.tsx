@@ -52,7 +52,7 @@ const SettingsPage = () => {
   const [buttonState, setButtonState] = useState<ButtonState>({
     isLoading: false,
     isDisabled: false,
-    text: "Save Configuration",
+    text: "保存配置",
     showProgress: false,
   });
 
@@ -101,9 +101,9 @@ const SettingsPage = () => {
       return true;
     } catch (error: any) {
       notify.error(
-        "Cannot save settings",
+        "无法保存设置",
         error?.message ||
-        `Unable to reach ${provider} with the provided API key. Please verify your settings and try again.`
+        `无法使用提供的 API key 访问 ${provider}，请检查配置后重试。`
       );
       return false;
     }
@@ -131,7 +131,7 @@ const SettingsPage = () => {
     if (llmConfig.LLM === 'codex') {
       const isAuthenticated = await checkCurrentAuthStatus();
       if (!isAuthenticated) {
-        notify.error("Sign in required", "Please sign in to ChatGPT to continue.");
+        notify.error("需要登录", "请先登录 ChatGPT 后再继续。");
         return;
       }
     }
@@ -140,7 +140,7 @@ const SettingsPage = () => {
     });
     const validationError = getLLMConfigValidationError(llmConfig);
     if (validationError) {
-      notify.warning("Cannot save settings", validationError);
+      notify.warning("无法保存设置", validationError);
       if (
         selectedProvider === "image-provider" &&
         llmConfig.LLM === "openai" &&
@@ -161,7 +161,7 @@ const SettingsPage = () => {
         ...prev,
         isLoading: true,
         isDisabled: true,
-        text: "Saving Configuration...",
+        text: "正在保存配置…",
       }));
       trackEvent(MixpanelEvent.Settings_SaveConfiguration_API_Call);
       await handleSaveLLMConfig(llmConfig);
@@ -189,28 +189,28 @@ const SettingsPage = () => {
         }
       }
       notify.success(
-        ollamaModelDownloaded ? "Settings saved and model ready" : "Settings saved",
+        ollamaModelDownloaded ? "设置已保存，模型已就绪" : "设置已保存",
         ollamaModelDownloaded
-          ? "Your configuration was saved and the Ollama model finished downloading."
-          : "Your configuration was saved successfully."
+          ? "配置已保存，Ollama 模型也已下载完成。"
+          : "配置已成功保存。"
       );
       setButtonState((prev) => ({
         ...prev,
         isLoading: false,
         isDisabled: false,
-        text: "Save Configuration",
+        text: "保存配置",
       }));
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Something went wrong while saving.";
-      notify.error("Could not save settings", message);
+          : "保存设置时出错。";
+      notify.error("无法保存设置", message);
       setButtonState((prev) => ({
         ...prev,
         isLoading: false,
         isDisabled: false,
-        text: "Save Configuration",
+        text: "保存配置",
       }));
     }
   };
@@ -233,12 +233,12 @@ const SettingsPage = () => {
         setButtonState({
           isLoading: false,
           isDisabled: false,
-          text: "Save Configuration",
+          text: "保存配置",
           showProgress: false,
         });
         notify.info(
-          "Download cancelled",
-          "The Ollama model download was stopped. Your settings are already saved—you can save again to retry the download."
+          "下载已取消",
+          "已停止下载 Ollama 模型。你的设置已经保存，重新点击保存可再次开始下载。"
         );
         return "cancelled";
       }
@@ -262,7 +262,7 @@ const SettingsPage = () => {
       setButtonState({
         isLoading: true,
         isDisabled: true,
-        text: `Downloading Model (${percentage}%)`,
+        text: `正在下载模型（${percentage}%）`,
         showProgress: true,
         progressPercentage: percentage,
         status: downloadingModel.status,
@@ -327,11 +327,11 @@ const SettingsPage = () => {
     : textProviderLabel;
 
   const imageSummary = llmConfig.DISABLE_IMAGE_GENERATION
-    ? "Image generation disabled"
+    ? "图像生成已关闭"
     : llmConfig.IMAGE_PROVIDER
       ? IMAGE_PROVIDERS[llmConfig.IMAGE_PROVIDER]?.label ||
       llmConfig.IMAGE_PROVIDER
-      : "No image provider";
+      : "未设置图像服务商";
 
 
   useEffect(() => {
@@ -353,7 +353,7 @@ const SettingsPage = () => {
       (llmConfig.LLM === "ollama" && !llmConfig.OLLAMA_MODEL) ||
       (llmConfig.LLM === "custom" && !llmConfig.CUSTOM_MODEL)
     ) {
-      notify.error("Cannot save settings", "Please select a model for the selected provider");
+      notify.error("无法保存设置", "请为所选服务商选择一个模型");
 
       const currentUrl = window.location.href;
 
@@ -423,7 +423,7 @@ const SettingsPage = () => {
           <div className="sticky top-0 right-0 z-50 py-[28px]   backdrop-blur mb-4 ">
             <div className="flex  gap-3 items-center ">
               <h3 className=" text-[28px] tracking-[-0.84px] font-unbounded font-normal text-black flex items-center gap-2">
-                Settings
+                设置
               </h3>
               <p className="text-[10px] px-2.5 py-0.5 rounded-[50px] text-[#7A5AF8] border border-[#EDEEEF]  font-medium ">
                 {textSummary} · {imageSummary}
@@ -450,13 +450,13 @@ const SettingsPage = () => {
           {selectedProvider === "session" && (
             <div className="w-full max-w-lg space-y-5 rounded-[20px] border border-[#EDEEEF] bg-white p-7">
               <div>
-                <h4 className="font-unbounded text-lg font-normal text-black">Sign out</h4>
+                <h4 className="font-unbounded text-lg font-normal text-black">退出登录</h4>
                 <p className="mt-2 font-syne text-sm leading-relaxed text-[#494A4D]">
-                  End your session on this deployment. You will need to sign in again to use the app and access the API.
+                  结束当前部署的登录状态。再次使用应用或访问 API 时需要重新登录。
                 </p>
               </div>
               <LogoutButton
-                label="Sign out"
+                label="退出登录"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-[58px] border border-[#EDEEEF] bg-[#7C51F8] px-5 py-3 font-syne text-xs font-semibold text-white transition hover:bg-[#6d46e6] disabled:cursor-not-allowed disabled:opacity-60"
               />
             </div>
@@ -512,8 +512,8 @@ const SettingsPage = () => {
               {/* Title */}
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {downloadingModel.done
-                  ? "Download Complete!"
-                  : "Downloading Model"}
+                  ? "下载完成！"
+                  : "正在下载模型"}
               </h3>
 
               {/* Model Name */}
@@ -531,7 +531,7 @@ const SettingsPage = () => {
                     />
                   </div>
                   <p className="text-sm text-gray-600 mt-2">
-                    {downloadProgress}% Complete
+                    已完成 {downloadProgress}%
                   </p>
                 </div>
               )}
@@ -551,11 +551,11 @@ const SettingsPage = () => {
                 downloadingModel.status !== "pulled" && (
                   <div className="text-xs text-gray-500">
                     {downloadingModel.status === "downloading" &&
-                      "Downloading model files..."}
+                      "正在下载模型文件…"}
                     {downloadingModel.status === "verifying" &&
-                      "Verifying model integrity..."}
+                      "正在校验模型完整性…"}
                     {downloadingModel.status === "pulling" &&
-                      "Pulling model from registry..."}
+                      "正在从模型仓库拉取…"}
                   </div>
                 )}
 
@@ -564,12 +564,12 @@ const SettingsPage = () => {
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                   <div className="flex justify-between text-xs text-gray-600">
                     <span>
-                      Downloaded:{" "}
+                      已下载：
                       {(downloadingModel.downloaded / 1024 / 1024).toFixed(1)}{" "}
                       MB
                     </span>
                     <span>
-                      Total: {(downloadingModel.size / 1024 / 1024).toFixed(1)}{" "}
+                      总计：{(downloadingModel.size / 1024 / 1024).toFixed(1)}{" "}
                       MB
                     </span>
                   </div>
@@ -584,7 +584,7 @@ const SettingsPage = () => {
                     className="rounded-lg border-gray-300 text-gray-800 hover:bg-gray-50"
                     onClick={() => downloadAbortRef.current?.abort()}
                   >
-                    Cancel download
+                    取消下载
                   </Button>
                 </div>
               )}
