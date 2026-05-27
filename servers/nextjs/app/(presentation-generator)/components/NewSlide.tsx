@@ -128,7 +128,7 @@ const NewSlideV1 = ({
         setShowNewSlideSelection(false);
       } catch (error: any) {
         console.error(error);
-        notify.error("Could not add slide", "Something went wrong while adding the new slide.");
+        notify.error("无法添加幻灯片", "添加新幻灯片时出错。");
       }
     },
     [
@@ -174,9 +174,7 @@ const NewSlideV1 = ({
     };
   }, [isCustomTemplate, templateID]);
 
-  const layoutCountText = `${layouts.length} Layout${
-    layouts.length === 1 ? "" : "s"
-  }`;
+  const layoutCountText = `${layouts.length} 种版式`;
 
   return (
     <div
@@ -187,7 +185,7 @@ const NewSlideV1 = ({
     >
       <button
         type="button"
-        aria-label="Close layout picker"
+        aria-label="关闭版式选择器"
         onClick={() => setShowNewSlideSelection(false)}
         className="absolute right-0 top-[-52px] z-50 flex h-10 w-10 items-center justify-center rounded-full border border-[#EDEEEF] bg-white text-[#191919] shadow-[0_6.6px_13.2px_rgba(0,0,0,0.10)] transition hover:bg-[#F7F6F9]"
       >
@@ -200,10 +198,10 @@ const NewSlideV1 = ({
             id="choose-slide-layout-title"
             className="text-base font-medium leading-tight text-[#191919]"
           >
-            Choose Slide Layout
+            选择幻灯片版式
           </h2>
           <p className="mt-1 text-xs font-normal leading-none text-[#7A7A85]">
-            {loading ? "Loading layouts" : layoutCountText}
+            {loading ? "正在加载版式" : layoutCountText}
           </p>
         </div>
         {loading && (
@@ -228,7 +226,7 @@ const NewSlideV1 = ({
           </div>
         ) : (
           <div className="flex h-56 items-center justify-center rounded-lg border border-dashed border-[#D9D9E1] bg-[#FAFAFB] text-sm text-[#7A7A85]">
-            No layouts available.
+            暂无可用版式。
           </div>
         )}
       </div>

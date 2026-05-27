@@ -55,7 +55,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
             }}
           >
             <UploadIcon className={`w-4 h-4 text-black`} />
-            <p className='text-xs font-medium text-black'>Upload PPTX File</p>
+            <p className='text-xs font-medium text-black'>上传 PPTX 文件</p>
           </div>
         </div>
         <div className=" w-full bg-[#FAFAFF] rounded-[28px] p-2.5 "
@@ -82,7 +82,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
                       </div>
                     </div>
                     <p className='pt-3 text-xs font-normal text-[#808080] tracking-[-0.12px] text-center'>
-                      <span className='text-[#808080] underline underline-offset-4'>Click to Upload</span> or drag &amp; drop.
+                      <span className='text-[#808080] underline underline-offset-4'>点击上传</span> 或拖放文件。
                     </p>
                   </div>
                 </> : <div className="flex gap-2 items-center justify-center h-full w-fit mx-auto">
@@ -106,7 +106,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
                     </div>
                     <div className="flex-1">
                       <h3 className="text-[#4C4C4C] text-sm font-medium line-clamp-1"> {selectedFile.name}</h3>
-                      <p className="text-xs font-normal text-[#808080] tracking-[-0.12px]">Presentation ( {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)</p>
+                      <p className="text-xs font-normal text-[#808080] tracking-[-0.12px]">演示文稿（{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB）</p>
                     </div>
 
                   </div>
@@ -118,17 +118,17 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
               <div className="flex items-center justify-between gap-2.5">
                 <div className="min-w-[140px] w-full">
                   {isProcessing ? (
-                    <div className="flex items-center justify-end gap-3" aria-live="polite" aria-label="Processing">
+                    <div className="flex items-center justify-end gap-3" aria-live="polite" aria-label="处理中">
                       <div
                         className="h-[14px] w-[74px] rounded-full bg-[#EFEDFF] overflow-hidden ring-1 ring-[#E4E0FF]"
                         aria-hidden="true"
                       >
                         <div className="h-full w-full rounded-full processing-stripes" />
                       </div>
-                      <p className="text-sm font-medium text-[#9A9AA6] tracking-[-0.1px]">Processing</p>
+                      <p className="text-sm font-medium text-[#9A9AA6] tracking-[-0.1px]">处理中</p>
                       {slides.length > 0 ? (
                         <p className="text-sm font-medium text-[#9A9AA6] tracking-[-0.1px]">
-                          {completedSlides}/{slides.length} Slides
+                          {completedSlides}/{slides.length} 张幻灯片
                         </p>
                       ) : null}
                       <style jsx>{`
@@ -168,10 +168,10 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
                         disabled={isProcessing}
                       >
                         {isProcessingPptx
-                          ? "Checking Fonts..."
+                          ? "正在检查字体..."
                           : !selectedFile
-                            ? "Select a PPTX file"
-                            : "Check Fonts"}
+                            ? "请选择 PPTX 文件"
+                            : "检查字体"}
                         <ChevronRight className="w-3.5 h-3.5 text-black" />
                       </button>
                     </div>
@@ -189,19 +189,19 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8.5" cy="8.17041" r="4.5" fill="#EBE9FE" />
             </svg>
-            <p className="md:text-sm text-[10px] font-normal text-[#3A3A3A] ">PPTX. Only</p>
+            <p className="md:text-sm text-[10px] font-normal text-[#3A3A3A] ">仅支持 PPTX</p>
           </li>
           <li className="flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8.5" cy="8.17041" r="4.5" fill="#EBE9FE" />
             </svg>
-            <p className="md:text-sm text-[10px] font-normal text-[#3A3A3A] ">Max 100MB</p>
+            <p className="md:text-sm text-[10px] font-normal text-[#3A3A3A] ">最大 100MB</p>
           </li>
           <li className="flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8.5" cy="8.17041" r="4.5" fill="#EBE9FE" />
             </svg>
-            <p className="md:text-sm text-[10px] font-normal text-[#3A3A3A] ">5min Generation</p>
+            <p className="md:text-sm text-[10px] font-normal text-[#3A3A3A] ">约 5 分钟生成</p>
           </li>
         </ul>
 
@@ -211,7 +211,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
             <path d="M10 6V10M10 14H10.0088" stroke="#5B49A1" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
           <p className="text-sm md:text-base font-medium text-[#20165C] tracking-[-0.13px]">
-            <span className="font-bold text-[#5B49A1]">Note:</span> Each slide is sent to your configured text model as a <span className="font-semibold">screenshot plus HTML reference</span>. Only <span className="font-semibold">vision-capable</span> models (image input) can use the layout faithfully. Text-only models may error or produce weak layouts; pick a vision model in Settings for your provider.
+            <span className="font-bold text-[#5B49A1]">提示：</span>每张幻灯片都会以<span className="font-semibold">截图加 HTML 参考</span>的形式发送给已配置的文本模型。只有<span className="font-semibold">支持视觉</span>（图像输入）的模型才能忠实还原版式。仅支持文本的模型可能报错或生成质量较差的版式；请在设置中为你的服务商选择具备视觉能力的模型。
           </p>
         </div>
 

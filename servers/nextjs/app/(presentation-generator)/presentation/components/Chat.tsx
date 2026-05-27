@@ -94,7 +94,7 @@ const suggestions: { id: string; icon: ReactNode; suggestion: string }[] = [
         </defs>
       </svg>
     ),
-    suggestion: "Generate a full presentation from my topic",
+    suggestion: "根据我的主题生成一份完整演示",
   },
   {
     id: "improve",
@@ -146,7 +146,7 @@ const suggestions: { id: string; icon: ReactNode; suggestion: string }[] = [
         </defs>
       </svg>
     ),
-    suggestion: "Improve this slide content",
+    suggestion: "优化这一页幻灯片的内容",
   },
   {
     id: "rewrite",
@@ -173,7 +173,7 @@ const suggestions: { id: string; icon: ReactNode; suggestion: string }[] = [
         />
       </svg>
     ),
-    suggestion: "Rewrite this content professionally",
+    suggestion: "用更专业的表达重写这段内容",
   },
   {
     id: "notes",
@@ -212,15 +212,15 @@ const suggestions: { id: string; icon: ReactNode; suggestion: string }[] = [
         />
       </svg>
     ),
-    suggestion: "Add speaker notes to this slide",
+    suggestion: "给这一页添加演讲者备注",
   },
 ];
 
 const quickPrompts = [
-  "Expand each section",
-  "Reorder for storytelling",
-  "Add missing sections",
-  "Convert to pitch flow",
+  "把每个章节扩写得更详细",
+  "按讲故事的顺序重新排序",
+  "补全缺失的章节",
+  "改写成路演结构",
 ];
 
 type ChatMessage = {
@@ -275,16 +275,16 @@ const AssistantMarker = () => (
 );
 
 const TOOL_LABELS: Record<string, string> = {
-  getPresentationOutline: "Outline reader",
-  searchSlides: "Slide search",
-  getSlideAtIndex: "Slide reader",
-  getPresentationThemeCatalog: "Theme catalog",
-  getAvailableLayouts: "Layout finder",
-  getContentSchemaFromLayoutId: "Schema checker",
-  generateAssets: "Asset generator",
-  saveSlide: "Slide saver",
-  deleteSlide: "Slide remover",
-  setPresentationTheme: "Theme applier",
+  getPresentationOutline: "读取大纲",
+  searchSlides: "搜索幻灯片",
+  getSlideAtIndex: "读取幻灯片",
+  getPresentationThemeCatalog: "查询主题列表",
+  getAvailableLayouts: "查询可用版式",
+  getContentSchemaFromLayoutId: "校验版式 Schema",
+  generateAssets: "生成图片素材",
+  saveSlide: "保存幻灯片",
+  deleteSlide: "删除幻灯片",
+  setPresentationTheme: "应用主题",
 };
 
 const MUTATING_TOOLS = new Set(["saveSlide", "deleteSlide", "setPresentationTheme"]);
@@ -309,37 +309,37 @@ const humanizeTraceMessage = (message: string, tool?: string) => {
 
   const lower = trimmed.toLowerCase();
   if (lower === "reading deck context") {
-    return "Reviewing your presentation context.";
+    return "正在阅读演示上下文。";
   }
   if (lower === "reading the presentation outline") {
-    return "Reading the presentation outline.";
+    return "正在读取演示大纲。";
   }
   if (lower === "searching relevant slides") {
-    return "Searching slides for relevant content.";
+    return "正在搜索相关幻灯片。";
   }
   if (lower === "opening the requested slide") {
-    return "Opening the selected slide.";
+    return "正在打开所选幻灯片。";
   }
   if (lower === "checking available themes") {
-    return "Checking available color themes.";
+    return "正在查询可用主题。";
   }
   if (lower === "checking available layouts") {
-    return "Checking available layouts.";
+    return "正在查询可用版式。";
   }
   if (lower === "checking the layout schema") {
-    return "Validating the slide schema.";
+    return "正在校验幻灯片 Schema。";
   }
   if (lower === "generating slide assets") {
-    return "Generating images and icons.";
+    return "正在生成图片与图标。";
   }
   if (lower === "saving the slide") {
-    return "Saving slide updates.";
+    return "正在保存幻灯片更新。";
   }
   if (lower === "deleting the slide") {
-    return "Deleting the slide.";
+    return "正在删除幻灯片。";
   }
   if (lower === "applying presentation theme") {
-    return "Applying the selected theme.";
+    return "正在应用所选主题。";
   }
   if (lower.startsWith("using tools:")) {
     const toolNames = trimmed
@@ -349,18 +349,18 @@ const humanizeTraceMessage = (message: string, tool?: string) => {
       .filter(Boolean)
       .map((entry) => getToolLabel(entry));
     if (toolNames.length === 0) {
-      return "Planning tool steps.";
+      return "正在规划工具调用。";
     }
-    return `Planning tools: ${toolNames.join(", ")}.`;
+    return `规划工具：${toolNames.join("、")}。`;
   }
   if (lower.includes("found requested data")) {
     if (tool === "getSlideAtIndex") {
-      return "Found the requested slide details.";
+      return "已获取所请求的幻灯片详情。";
     }
     if (tool === "getPresentationOutline") {
-      return "Found the requested outline details.";
+      return "已获取所请求的大纲详情。";
     }
-    return "Found the requested information.";
+    return "已获取所请求的信息。";
   }
   if (lower.endsWith("completed.")) {
     return trimmed;
@@ -592,8 +592,8 @@ const Chat = ({
         const detail =
           error instanceof Error
             ? error.message
-            : "Could not load previous chat";
-        notify.error("Could not load chat", detail);
+            : "无法加载历史会话";
+        notify.error("无法加载会话", detail);
       } finally {
         if (!cancelled) {
           setIsHistoryLoading(false);
@@ -780,7 +780,7 @@ const Chat = ({
       await onPresentationChanged();
     } catch (error) {
       console.error("Failed to refresh presentation after tool mutation:", error);
-      notify.error("Refresh failed", "Slides were saved, but refresh failed.");
+      notify.error("刷新失败", "幻灯片已保存，但刷新失败。");
     } finally {
       refreshInFlightRef.current = false;
       if (refreshQueuedRef.current) {
@@ -807,7 +807,7 @@ const Chat = ({
       await onPresentationChanged();
     } catch (error) {
       console.error("Failed to refresh presentation after chat update:", error);
-      notify.error("Refresh failed", "Chat completed, but slide refresh failed.");
+      notify.error("刷新失败", "会话已完成，但幻灯片刷新失败。");
     }
   };
 
@@ -905,7 +905,7 @@ const Chat = ({
     }
 
     if (!presentationId) {
-      notify.error("Presentation not ready", "The presentation is not ready yet.");
+      notify.error("演示尚未就绪", "演示文稿暂未准备好。");
       return;
     }
 
@@ -1044,7 +1044,7 @@ const Chat = ({
       }
 
       const message =
-        error instanceof Error ? error.message : "Failed to send chat message";
+        error instanceof Error ? error.message : "发送消息失败";
 
       setMessages((previous) =>
         previous.map((entry) =>
@@ -1071,7 +1071,7 @@ const Chat = ({
           content: message,
         },
       ]);
-      notify.error("Chat error", message);
+      notify.error("会话出错", message);
     } finally {
       setActiveMutationToolCount(0);
       if (abortControllerRef.current === streamAbortController) {
@@ -1124,12 +1124,12 @@ const Chat = ({
                 fill="#7A5AF8"
               />
             </svg>
-            AI Assistant
+            AI 助手
           </h4>
           {isSending && (
             <span className="inline-flex items-center gap-1 rounded-full bg-[#F4F3FF] px-2 py-0.5 text-[10px] font-medium text-[#6941C6]">
               <Loader2 className="h-2.5 w-2.5 animate-spin" />
-              Live
+              进行中
             </span>
           )}
         </div>
@@ -1138,8 +1138,8 @@ const Chat = ({
           onClick={resetChat}
           disabled={isSending || isHistoryLoading}
           className="rounded-full p-1 text-[#8C8C8C] transition-colors hover:bg-[#F7F7F7] hover:text-[#191919] disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="Reset chat"
-          title="Reset chat"
+          aria-label="重置会话"
+          title="重置会话"
         >
           <RefreshCw className="h-4 w-4" />
         </button>
@@ -1149,13 +1149,13 @@ const Chat = ({
         {isHistoryLoading && messages.length === 0 ? (
           <div className="flex items-center justify-center py-8 text-sm text-[#99A1AF]">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Loading chat…
+            正在加载会话…
           </div>
         ) : messages.length === 0 ? (
           <>
             <div>
               <h4 className="mb-2 text-[10px] font-normal leading-[15px] tracking-[0.367px] text-[#99A1AF]">
-                SUGGESTIONS
+推荐操作
               </h4>
               <div className="flex flex-col gap-1.5">
                 {suggestions.map((suggestion) => (
@@ -1238,7 +1238,7 @@ const Chat = ({
                     <div className="text-sm font-normal leading-5 text-[#535862]">
                       {isSending && message.role === "assistant"
                         ? message.activity?.[message.activity.length - 1]
-                            ?.label || "Working on it..."
+                            ?.label || "处理中…"
                         : ""}
                     </div>
                   )}
@@ -1254,7 +1254,7 @@ const Chat = ({
                         ) : (
                           <ChevronRight className="h-3 w-3" />
                         )}
-                        <span>Thinking</span>
+                        <span>思考过程</span>
                         {message.activity.some(
                           (item) => item.state === "running"
                         ) && (
@@ -1280,7 +1280,7 @@ const Chat = ({
                           {message.toolCalls &&
                             message.toolCalls.length > 0 && (
                               <div className="pt-0.5 text-[11px] text-[#98A2B3]">
-                                Tools called: {message.toolCalls.join(", ")}
+                                调用的工具：{message.toolCalls.join("、")}
                               </div>
                             )}
                         </div>
@@ -1313,7 +1313,7 @@ const Chat = ({
           disabled={isSending || isHistoryLoading}
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Improve your slides..."
+          placeholder="告诉我如何优化你的幻灯片…"
           aria-invalid={Boolean(errorMessage)}
         />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
@@ -1322,8 +1322,8 @@ const Chat = ({
               type="button"
               disabled
               className="inline-flex h-[28px] items-center rounded-[64px] border border-[#EDEEEF] bg-white px-3 py-1 opacity-50"
-              aria-label="Attach files"
-              title="Attachments are not supported yet"
+              aria-label="附加文件"
+              title="暂不支持附加文件"
             >
               <Plus className="h-3 w-3 text-black" />
             </button>
@@ -1337,16 +1337,16 @@ const Chat = ({
                   : "border-[#E5E7EB] bg-white text-[#667085]"
               } disabled:cursor-not-allowed disabled:opacity-50`}
               aria-label={
-                isFollowAgentEnabled ? "Disable follow AI mode" : "Enable follow AI mode"
+                isFollowAgentEnabled ? "关闭跟随 AI 模式" : "开启跟随 AI 模式"
               }
               title={
                 isFollowAgentEnabled
-                  ? "Follow AI is on: auto-jump to active slide"
-                  : "Follow AI is off"
+                  ? "跟随 AI 已开启：自动跳转到当前幻灯片"
+                  : "跟随 AI 已关闭"
               }
             >
               <LocateFixed className="h-3 w-3" />
-              <span>{isFollowAgentEnabled ? "Following" : "Follow AI"}</span>
+              <span>{isFollowAgentEnabled ? "跟随中" : "跟随 AI"}</span>
             </button>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -1355,11 +1355,11 @@ const Chat = ({
                 type="button"
                 onClick={stopStreaming}
                 className="flex items-center gap-1.5 whitespace-nowrap rounded-[34px] border border-[#E4E7EC] bg-white px-3 py-2 text-sm font-medium text-[#344054] transition-colors hover:bg-[#F9FAFB]"
-                aria-label="Stop chat response"
+                aria-label="停止回复"
               >
                 <Loader2 className="h-3 w-3 animate-spin text-[#667085]" aria-hidden="true" />
                 <Square className="h-3 w-3 fill-current" aria-hidden="true" />
-                Stop
+                停止
               </button>
             ) : (
               <button
@@ -1373,7 +1373,7 @@ const Chat = ({
                 }}
               >
                 <Send className="h-3 w-3 text-[#191919]" />
-                Send
+                发送
               </button>
             )}
           </div>

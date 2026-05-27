@@ -56,8 +56,7 @@ export function SortableListItem({ slide, index, selectedSlide, onSlideClick }: 
                     : 'hover:slide-box/40 border-gray-300'
                 }`}
         >
-            <span className="font-medium slide-title">第 {index + 1} 张
-          
+            <span className="font-medium slide-title">第 {index + 1} 张</span>
         </div>
     );
 } 

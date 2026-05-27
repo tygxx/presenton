@@ -135,11 +135,11 @@ const ImageEditor = ({
         await PresentationGenerationApi.getPreviousGeneratedImages();
       setPreviousGeneratedImages(response);
     } catch (error: any) {
-      notify.error("Could not load images", "Failed to get previous generated images. Please try again.");
+      notify.error("无法加载图片", "获取历史生成图片失败，请重试。");
       console.error("error in getting previous generated images", error);
       setError(
         error.message ||
-          "Failed to get previous generated images. Please try again."
+          "获取历史生成图片失败，请重试。"
       );
     }
   };
@@ -320,8 +320,8 @@ const ImageEditor = ({
       const result = await ImagesApi.uploadImage(file);
       setUploadedImageUrl(resolveEditorImageSource(result));
     } catch (err:any) {
-      setUploadError("Failed to upload image. Please try again.");
-      notify.error("Upload failed", err.message || "Failed to upload image. Please try again.");
+      setUploadError("图片上传失败，请重试。");
+      notify.error("上传失败", err.message || "图片上传失败，请重试。");
       console.log("Upload error:", err.message);
     } finally {
       setIsUploading(false);
@@ -334,7 +334,7 @@ const ImageEditor = ({
       const result = await ImagesApi.getUploadedImages();
       setUploadedImages(result);
     } catch (err:any) {
-      notify.error("Could not load images", err.message || "Failed to get uploaded images. Please try again.");
+      notify.error("无法加载图片", err.message || "获取已上传图片失败，请重试。");
       console.log("Get uploaded images error:", err.message);
     } finally {
       setUploadedImagesLoading(false);
@@ -350,9 +350,9 @@ const ImageEditor = ({
     try {
       await ImagesApi.deleteImage(image_id);
       setUploadedImages(uploadedImages.filter((image) => image.id !== image_id));
-      notify.success("Image deleted", "The image was removed from your uploads.");
+      notify.success("图片已删除", "该图片已从上传记录中移除。");
     } catch (err:any) {
-      notify.error("Could not delete image", err.message || "Failed to delete image. Please try again.");
+      notify.error("无法删除图片", err.message || "删除图片失败，请重试。");
     }
   };
   return (
@@ -365,39 +365,39 @@ const ImageEditor = ({
           onClick={(e) => e.stopPropagation()}
         >
           <SheetHeader>
-            <SheetTitle>Update Image</SheetTitle>
+            <SheetTitle>更新图片</SheetTitle>
           </SheetHeader>
 
           <div className="mt-6">
             <Tabs defaultValue="generate" className="w-full" onValueChange={handleTabChange}>
               <TabsList className="grid bg-blue-100 border border-blue-300 w-full grid-cols-3 mx-auto">
                 <TabsTrigger className="font-medium" value="generate">
-                  {stockImageProvider ? "Stock search" : "AI Generate"}
+                  {stockImageProvider ? "图库搜索" : "AI 生成"}
                 </TabsTrigger>
                 <TabsTrigger className="font-medium" value="upload">
-                  Upload
+                  上传
                 </TabsTrigger>
                 <TabsTrigger className="font-medium" value="edit">
-                  Edit
+                  编辑
                 </TabsTrigger>
               </TabsList>
               {/* Generate Tab */}
               <TabsContent value="generate" className="mt-4 space-y-4 overflow-y-auto hide-scrollbar h-[85vh]">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium mb-1">Current Prompt</h3>
+                    <h3 className="text-sm font-medium mb-1">当前提示词</h3>
                     <p className="text-sm text-gray-500">{promptContent}</p>
                   </div>
 
                   <div>
                     <h3 className="text-base font-medium mb-2">
-                      {stockImageProvider ? "Search keywords" : "Image Description"}
+                      {stockImageProvider ? "搜索关键词" : "图片描述"}
                     </h3>
                     <Textarea
                       placeholder={
                         stockImageProvider
-                          ? "e.g. team collaboration, modern office, sunset mountains…"
-                          : "Describe the image you want to generate..."
+                          ? "如：团队协作、现代办公、日落山景……"
+                          : "描述你想生成的图片……"
                       }
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
@@ -417,18 +417,18 @@ const ImageEditor = ({
                     )}
                     {stockImageProvider
                       ? isSearchingStock
-                        ? "Searching…"
-                        : "Search stock images"
+                        ? "正在搜索…"
+                        : "搜索图库图片"
                       : isGenerating
-                        ? "Generating..."
-                        : "Generate Image"}
+                        ? "正在生成…"
+                        : "生成图片"}
                   </Button>
 
                   {error && <p className="text-red-500 text-sm">{error}</p>}
 
                   {stockImageProvider ? (
                     <div className="space-y-3">
-                      <h3 className="text-sm font-medium">Results — click an image to use it</h3>
+                      <h3 className="text-sm font-medium">搜索结果——点击即可使用</h3>
                       <div className="grid grid-cols-2 gap-3">
                         {isSearchingStock
                           ? Array.from({ length: 8 }).map((_, index) => (
@@ -454,8 +454,7 @@ const ImageEditor = ({
                       </div>
                       {!isSearchingStock && stockSearchResults.length === 0 && (
                         <p className="text-sm text-gray-500">
-                          Run a search to see thumbnails from{" "}
-                          {stockImageProvider === "pexels" ? "Pexels" : "Pixabay"}.
+                          输入关键词，查看来自 {stockImageProvider === "pexels" ? "Pexels" : "Pixabay"} 的预览图。
                         </p>
                       )}
                     </div>
@@ -477,7 +476,7 @@ const ImageEditor = ({
                             {previewImages && (
                               <img
                                 src={previewImages}
-                                alt={`Preview`}
+                                alt={`预览`}
                                 className="w-full h-full object-cover"
                               />
                             )}
@@ -487,7 +486,7 @@ const ImageEditor = ({
                       {previousGeneratedImages.length > 0 && (
                         <div className="mt-4">
                           <h3 className="text-sm font-medium mb-2">
-                            Previous Generated Images
+                            历史生成图片
                           </h3>
                           <div className="grid grid-cols-2 gap-4  ">
                             {previousGeneratedImages.map((image) => (
@@ -546,11 +545,11 @@ const ImageEditor = ({
                       )}
                       <span className="text-sm text-gray-600">
                         {isUploading
-                          ? "Uploading your image..."
-                          : "Click to upload an image"}
+                          ? "正在上传图片…"
+                          : "点击上传图片"}
                       </span>
                       <span className="text-xs text-gray-500 mt-1">
-                        Maximum file size: 5MB
+                        最大 5MB
                       </span>
                     </label>
                   </div>
@@ -564,7 +563,7 @@ const ImageEditor = ({
                   {(uploadedImageUrl || isUploading) && (
                     <div className="mt-4">
                       <h3 className="text-sm font-medium mb-2">
-                        Uploaded Image Preview
+                        已上传图片预览
                       </h3>
                       <div className="aspect-[4/3] relative rounded-lg overflow-hidden border border-gray-200">
                         {isUploading ? (
@@ -572,7 +571,7 @@ const ImageEditor = ({
                             <div className="flex flex-col items-center">
                               <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mb-2" />
                               <span className="text-sm text-gray-500">
-                                Processing...
+                                处理中…
                               </span>
                             </div>
                           </div>
@@ -586,13 +585,13 @@ const ImageEditor = ({
                             >
                               <img
                                 src={uploadedImageUrl}
-                                alt="Uploaded preview"
+                                alt="已上传图片预览"
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200" />
                               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span className="bg-white/90 px-3 py-1 rounded-full text-sm font-medium">
-                                  Click to use this image
+                                  点击使用此图片
                                 </span>
                               </div>
                             </div>
@@ -602,7 +601,7 @@ const ImageEditor = ({
                     </div>
                   )}
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Uploaded Images:</h3>
+                    <h3 className="text-sm font-medium mb-2">已上传图片：</h3>
                     <div className="grid grid-cols-2 gap-4">
                       {uploadedImagesLoading ? (
                         <div className="flex items-center justify-center">
@@ -623,13 +622,13 @@ const ImageEditor = ({
                               }}/>
                               <img
                               src={resolveEditorImageSource(image)}
-                                alt="Uploaded preview"
+                                alt="已上传图片预览"
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200" />
                               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span className="bg-white/90 px-3 py-1 rounded-full text-xs font-medium">
-                                  Use
+                                  使用
                                 </span>
                               </div>
                             </div>
@@ -643,7 +642,7 @@ const ImageEditor = ({
               </TabsContent>
               <TabsContent value="edit" className="mt-4 space-y-4">
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium mb-2">Current Image</h3>
+                  <h3 className="text-sm font-medium mb-2">当前图片</h3>
                   <div
                     onClick={(e) => {
                       if (isFocusPointMode) {
@@ -654,7 +653,7 @@ const ImageEditor = ({
                     className="aspect-[4/3] group  rounded-lg overflow-hidden relative border border-gray-200"
                   >
                     <p className="group-hover:opacity-100 opacity-0 transition-opacity absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-sm text-center font-medium bg-black/50 text-white px-2 py-1 rounded">
-                      Click to Change Focus Point
+                      点击调整焦点位置
                     </p>
                     {previewImages && (
                       <img
@@ -667,7 +666,7 @@ const ImageEditor = ({
                           objectFit: objectFit,
                           objectPosition: `${focusPoint.x}% ${focusPoint.y}%`,
                         }}
-                        alt={`Preview`}
+                        alt={`预览`}
                         className="w-full h-full "
                       />
                     )}
@@ -675,7 +674,7 @@ const ImageEditor = ({
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                         <div className="text-white text-center p-2 bg-black/50 rounded">
                           <p className="text-sm font-medium pointer-events-none">
-                            Click anywhere to set focus point
+                            点击任意位置设置焦点
                           </p>
                           <button
                             className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
@@ -684,7 +683,7 @@ const ImageEditor = ({
                               toggleFocusPointMode();
                             }}
                           >
-                            Done
+                            完成
                           </button>
                         </div>
 
@@ -709,7 +708,7 @@ const ImageEditor = ({
                   {/* Object Fit */}
                   {
                     <div>
-                      <h3 className="text-sm font-medium mb-2">Object Fit</h3>
+                      <h3 className="text-sm font-medium mb-2">填充方式</h3>
                       <div className="flex gap-4">
                         <Button
                           variant="outline"
@@ -719,7 +718,7 @@ const ImageEditor = ({
                           )}
                           onClick={() => handleFitChange("cover")}
                         >
-                          Cover
+                          覆盖
                         </Button>
                         <Button
                           variant="outline"
@@ -729,7 +728,7 @@ const ImageEditor = ({
                           )}
                           onClick={() => handleFitChange("contain")}
                         >
-                          Contain
+                          适应
                         </Button>
                         <Button
                           variant="outline"
@@ -738,7 +737,7 @@ const ImageEditor = ({
                           )}
                           onClick={() => handleFitChange("fill")}
                         >
-                          Fill
+                          拉伸
                         </Button>
                       </div>
                     </div>

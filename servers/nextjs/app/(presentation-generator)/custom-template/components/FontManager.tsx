@@ -71,11 +71,11 @@ const FontManager: React.FC<FontManagerProps> = ({
               <Type className="w-6 h-6 text-[#7A5AF8]" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-[#111827]">Font Management</h2>
+              <h2 className="text-xl font-semibold text-[#111827]">字体管理</h2>
               <p className="text-sm text-[#6B7280] mt-0.5">
                 {allFontsUploaded
-                  ? "All fonts are ready! You can proceed to preview."
-                  : "Upload missing fonts to ensure your presentation displays correctly."}
+                  ? "所有字体已就绪！可以进入预览。"
+                  : "请上传缺失的字体，以确保演示文稿显示正确。"}
               </p>
             </div>
           </div>
@@ -88,7 +88,7 @@ const FontManager: React.FC<FontManagerProps> = ({
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
                 <h4 className="text-sm font-semibold text-[#166534]">
-                  Available Fonts ({fontsData.available_fonts.length})
+                  可用字体（{fontsData.available_fonts.length}）
                 </h4>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -110,7 +110,7 @@ const FontManager: React.FC<FontManagerProps> = ({
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle className="w-5 h-5 text-[#D97706]" />
                 <h4 className="text-sm font-semibold text-[#92400E]">
-                  Missing Fonts ({fontsNeedingUpload.length})
+                  缺失字体（{fontsNeedingUpload.length}）
                 </h4>
               </div>
 
@@ -130,12 +130,12 @@ const FontManager: React.FC<FontManagerProps> = ({
                         </span>
                         {font.family_name && font.family_name !== font.name && (
                           <span className="text-xs text-[#6B7280] block">
-                            Family: {font.family_name}
+                            字体族：{font.family_name}
                             {font.variant ? ` · ${font.variant.replace(/_/g, " ")}` : ""}
                           </span>
                         )}
                         <span className="text-xs text-[#9CA3AF]">
-                          Upload must match this name exactly (.ttf, .otf, .woff, .woff2, .eot)
+                          上传文件名必须与此完全一致（.ttf、.otf、.woff、.woff2、.eot）
                         </span>
                       </div>
                     </div>
@@ -157,7 +157,7 @@ const FontManager: React.FC<FontManagerProps> = ({
                         className="rounded-full px-4 h-9 text-sm font-medium transition-all text-[#D97706] border-[#D97706] hover:bg-[#FFFBEB] hover:border-[#D97706]"
                       >
                         <Upload className="w-4 h-4 mr-1" />
-                        Upload
+                        上传
                       </Button>
                     </div>
                   </div>
@@ -172,7 +172,7 @@ const FontManager: React.FC<FontManagerProps> = ({
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
                 <h4 className="text-sm font-semibold text-[#166534]">
-                  Uploaded Fonts ({uploadedFonts.length})
+                  已上传字体（{uploadedFonts.length}）
                 </h4>
               </div>
               <div className="space-y-2">
@@ -211,12 +211,12 @@ const FontManager: React.FC<FontManagerProps> = ({
             {!allFontsUploaded && (
               <div className="flex items-start gap-2 text-sm text-[#6B7280]">
                 <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <p>You can continue without all fonts, but some text may not display correctly.</p>
+                <p>未上传全部字体时也可继续，但部分文本可能无法正确显示。</p>
               </div>
             )}
             {allFontsUploaded && (
               <p className="text-sm text-[#16A34A] font-medium">
-                ✓ All fonts are ready
+                ✓ 所有字体已就绪
               </p>
             )}
             <Button
@@ -236,11 +236,11 @@ const FontManager: React.FC<FontManagerProps> = ({
               {isUploading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Processing...
+                  处理中...
                 </>
               ) : (
                 <>
-                  {allFontsUploaded ? 'Continue to Preview' : 'Continue'}
+                  {allFontsUploaded ? '进入预览' : '继续'}
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </>
               )}

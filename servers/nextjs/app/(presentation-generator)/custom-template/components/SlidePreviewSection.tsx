@@ -32,11 +32,11 @@ export const SlidePreviewSection: React.FC<SlidePreviewSectionProps> = ({
                                 <Images className="w-6 h-6 text-[#7A5AF8]" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-semibold text-[#111827]">Slide Preview</h2>
+                                <h2 className="text-xl font-semibold text-[#111827]">幻灯片预览</h2>
                                 <p className="text-sm text-[#6B7280] mt-0.5">
-                                    {slideCount} slide{slideCount !== 1 ? 's' : ''} ready
+                                    已就绪 {slideCount} 张幻灯片
                                     {fontCount > 0 && (
-                                        <> · {fontCount} font{fontCount !== 1 ? 's' : ''} applied</>
+                                        <> · 已应用 {fontCount} 种字体</>
                                     )}
                                 </p>
                             </div>
@@ -54,7 +54,7 @@ export const SlidePreviewSection: React.FC<SlidePreviewSectionProps> = ({
                         >
                             <img
                                 src={resolveBackendAssetUrl(url)}
-                                alt={`Slide ${index + 1}`}
+                                alt={`幻灯片 ${index + 1}`}
                                 className="w-full h-full object-contain"
                             />
                             {/* Slide number badge */}
@@ -74,7 +74,7 @@ export const SlidePreviewSection: React.FC<SlidePreviewSectionProps> = ({
                 <div className="px-6 py-5 border-t border-[#F3F4F6] bg-gradient-to-r from-[#FAFAFA] to-white">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <p className="text-sm text-[#6B7280] max-w-md text-center sm:text-left">
-                            Ready to generate your template. Each slide will be converted to a reusable React component.
+                            模板已准备好生成。每张幻灯片都将被转换为可复用的 React 组件。
                         </p>
                         <Button
                             size="lg"
@@ -91,12 +91,12 @@ export const SlidePreviewSection: React.FC<SlidePreviewSectionProps> = ({
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                                    Starting...
+                                    启动中...
                                 </>
                             ) : (
                                 <>
 
-                                    Generate Template
+                                    生成模板
                                     <ChevronRight className="w-4 h-4 ml-1" />
                                 </>
                             )}

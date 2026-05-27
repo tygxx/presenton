@@ -36,7 +36,7 @@ export const SlideContentDisplay: React.FC<SlideContentDisplayProps> = ({
                 <span className="text-white text-xs">✨</span>
               </div>
               <span className="text-sm font-medium text-[#5B21B6]">
-                Showing AI-generated preview
+                正在显示 AI 生成的预览
               </span>
             </div>
             {onClearPreview && (
@@ -47,7 +47,7 @@ export const SlideContentDisplay: React.FC<SlideContentDisplayProps> = ({
                 className="h-8 text-[#7A5AF8] hover:text-[#5B21B6] hover:bg-[#DDD6FE]"
               >
                 <X className="w-4 h-4 mr-1.5" />
-                Clear
+                清除
               </Button>
             )}
           </div>
@@ -84,11 +84,11 @@ export const SlideContentDisplay: React.FC<SlideContentDisplayProps> = ({
           </div>
           <div className="flex-1">
             <h4 className="text-base font-semibold text-[#991B1B] mb-1">
-              {isImageTooLarge ? "Image Too Large" : "Conversion Failed"}
+              {isImageTooLarge ? "图片过大" : "转换失败"}
             </h4>
             <p className="text-sm text-[#B91C1C] mb-4">
               {isImageTooLarge
-                ? "This slide's image exceeds the 5MB limit. Try using a smaller resolution PPTX file or compressing the images."
+                ? "该幻灯片的图片超过了 5MB 限制。请尝试使用更低分辨率的 PPTX 文件或压缩图片。"
                 : slide.error
               }
             </p>
@@ -97,7 +97,7 @@ export const SlideContentDisplay: React.FC<SlideContentDisplayProps> = ({
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full bg-white border border-[#FECACA] text-[#DC2626] hover:bg-[#FEE2E2] transition-all"
             >
               <RotateCcw className="w-4 h-4" />
-              Retry
+              重试
             </button>
           </div>
         </div>

@@ -137,13 +137,13 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
   const modelLabel = selectedProviderMeta?.label || selectedProvider;
   const providerApiKeyLabel =
     selectedProvider === "custom"
-      ? "Custom LLM API Key"
+      ? "自定义 LLM API Key"
       : selectedProvider === "vertex"
       ? "Vertex API Key"
       : selectedProvider === "azure"
       ? "Azure OpenAI API Key"
       : selectedProvider === "bedrock"
-      ? "Bedrock API Key (optional)"
+      ? "Bedrock API Key（可选）"
       : selectedProvider === "openrouter"
       ? "OpenRouter API Key"
       : selectedProvider === "fireworks"
@@ -153,9 +153,9 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
       : selectedProvider === "cerebras"
       ? "Cerebras API Key"
       : selectedProvider === "litellm"
-      ? "LiteLLM API key (optional)"
+      ? "LiteLLM API Key（可选）"
       : selectedProvider === "lmstudio"
-      ? "LM Studio API key (optional)"
+      ? "LM Studio API Key（可选）"
       : `${selectedProvider} API Key`;
 
   useEffect(() => {
@@ -376,15 +376,15 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
         setAvailableModels([]);
         setModelsChecked(true);
         notify.error(
-          "Could not load models",
-          `The server could not list ${modelLabel} models. Check your API key or endpoint and try again.`
+          "无法加载模型",
+          `服务端无法获取 ${modelLabel} 的模型列表，请检查 API Key 或接口地址后重试。`
         );
       }
     } catch (error) {
       console.error("Error fetching models:", error);
       notify.error(
-        "Could not load models",
-        "Something went wrong while contacting the provider. Check your network and try again."
+        "无法加载模型",
+        "联系服务商时出错，请检查网络后重试。"
       );
       setAvailableModels([]);
       setModelsChecked(true);
@@ -439,10 +439,10 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
             </svg>
           </div>
           <h3 className="text-xl font-normal text-[#191919] py-2.5">
-            Text Generation Settings
+            文本生成设置
           </h3>
           <p className=" text-sm  text-gray-500">
-            Choosing where text content comes from
+            选择文本内容由哪家服务商生成
           </p>
         </div>
         <div className="flex min-w-0 flex-1 flex-col items-stretch justify-end gap-4 sm:items-end">
@@ -458,7 +458,7 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
             >
               <div className="flex flex-col justify-start ">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Text Provider
+                  选择文本服务商
                 </label>
                 <Popover
                   open={openProviderSelect}
@@ -476,7 +476,7 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                           {llmConfig.LLM
                             ? LLM_PROVIDERS[llmConfig.LLM]?.label ||
                               llmConfig.LLM
-                            : "Select text provider"}
+                            : "选择文本服务商"}
                         </span>
                       </div>
                       <ChevronUp className="w-4 h-4 text-gray-500" />
@@ -488,9 +488,9 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                     style={{ width: "300px" }}
                   >
                     <Command>
-                      <CommandInput placeholder="Search provider..." />
+                      <CommandInput placeholder="搜索服务商..." />
                       <CommandList>
-                        <CommandEmpty>No provider found.</CommandEmpty>
+                        <CommandEmpty>未找到服务商。</CommandEmpty>
                         <CommandGroup>
                           {Object.values(LLM_PROVIDERS).map(
                             (provider, index) => (
@@ -556,12 +556,12 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                         }}
                         className="mt-8 py-2.5 bg-[#EDEEEF] px-3.5 w-fit rounded-[48px] text-xs font-semibold text-[#101323] transition-all duration-200 border border-[#EDEEEF] hover:bg-[#E8F0FF]/90 focus:ring-2 focus:ring-blue-500/20"
                       >
-                        Use Ollama URL
+                        使用 Ollama 地址
                       </button>
                     ) : (
                       <>
                         <label className="block text-sm font-medium capitalize text-gray-700 mb-2">
-                          Ollama URL
+                          Ollama 地址
                         </label>
                         <div className="relative">
                           <input
@@ -585,7 +585,7 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                           }}
                           className="mt-2 text-xs font-medium text-[#4B5563] underline underline-offset-2"
                         >
-                          Use default Ollama URL
+                          使用默认 Ollama 地址
                         </button>
                       </>
                     )}
@@ -626,8 +626,8 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                         className="w-full px-2 py-3 outline-none border  border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                         placeholder={
                           selectedProvider === "litellm"
-                            ? "Optional if your proxy does not require auth"
-                            : `Enter your ${providerApiKeyLabel}`
+                            ? "代理无需鉴权时可留空"
+                            : `请输入 ${providerApiKeyLabel}`
                         }
                       />
                       <button
@@ -652,13 +652,13 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                       onInputChange(e.target.value, "CUSTOM_LLM_URL")
                     }
                     className="w-full mt-2 px-2 py-3 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                    placeholder="OpenAI-compatible URL"
+                    placeholder="OpenAI 兼容的接口地址"
                   />
                 )}
                 {selectedProvider === "litellm" && (
                   <>
                     <label className="mt-3 block text-sm font-medium text-gray-700 mb-2">
-                      LiteLLM base URL
+                      LiteLLM 基础地址
                     </label>
                     <input
                       type="text"
@@ -670,16 +670,14 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                       placeholder="e.g. http://host.docker.internal:4000/v1"
                     />
                     <p className="mt-1.5 text-xs text-gray-500">
-                      OpenAI-compatible root (usually ends with /v1); /v1 is
-                      added if omitted. API key above is optional for local
-                      proxies with no auth.
+                      OpenAI 兼容的根地址（通常以 /v1 结尾），未填则自动补全。无鉴权的本地代理可不填写上面的 API Key。
                     </p>
                   </>
                 )}
                 {selectedProvider === "lmstudio" && (
                   <>
                     <label className="mt-3 block text-sm font-medium text-gray-700 mb-2">
-                      LM Studio base URL
+                      LM Studio 基础地址
                     </label>
                     <input
                       type="text"
@@ -691,15 +689,14 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                       placeholder="http://localhost:1234/v1"
                     />
                     <p className="mt-1.5 text-xs text-gray-500">
-                      Defaults to localhost:1234/v1, and /v1 is added
-                      automatically when omitted.
+                      默认 localhost:1234/v1，未填 /v1 时会自动补全。
                     </p>
                   </>
                 )}
                 {selectedProvider === "fireworks" && (
                   <>
                     <label className="mt-3 block text-sm font-medium text-gray-700 mb-2">
-                      Fireworks base URL (optional)
+                      Fireworks 基础地址（可选）
                     </label>
                     <input
                       type="text"
@@ -715,7 +712,7 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                 {selectedProvider === "together" && (
                   <>
                     <label className="mt-3 block text-sm font-medium text-gray-700 mb-2">
-                      Together base URL (optional)
+                      Together 基础地址（可选）
                     </label>
                     <input
                       type="text"
@@ -771,10 +768,10 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                     {modelsLoading ? (
                       <span className="flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Checking for models...
+                        正在检测可用模型…
                       </span>
                     ) : (
-                      "Check models"
+                      "检测可用模型"
                     )}
                   </button>
                 )}
@@ -789,8 +786,8 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   {selectedProvider === "ollama"
-                    ? "Choose a supported model"
-                    : `Select ${modelLabel} Model`}
+                    ? "选择已支持的模型"
+                    : `选择 ${modelLabel} 模型`}
                 </label>
                 <div className="w-full">
                   <Popover
@@ -806,7 +803,7 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                       >
                         <span className="text-sm truncate font-medium text-gray-900">
                           {(() => {
-                            if (!currentModel) return "Select a model";
+                            if (!currentModel) return "选择模型";
                             const selectedModel = availableModels.find(
                               (model) => model.value === currentModel
                             );
@@ -830,9 +827,9 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                       style={{ width: "var(--radix-popover-trigger-width)" }}
                     >
                       <Command>
-                        <CommandInput placeholder="Search models..." />
+                        <CommandInput placeholder="搜索模型..." />
                         <CommandList>
-                          <CommandEmpty>No model found.</CommandEmpty>
+                          <CommandEmpty>未找到模型。</CommandEmpty>
                           <CommandGroup>
                             {availableModels.map((model) => (
                               <CommandItem
@@ -888,8 +885,7 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
       {modelsChecked && availableModels.length === 0 && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
-            No models found. Please make sure your provider credentials are
-            valid and the selected provider is reachable.
+            未找到可用模型。请确认服务商凭据正确，且所选服务商可访问。
           </p>
         </div>
       )}

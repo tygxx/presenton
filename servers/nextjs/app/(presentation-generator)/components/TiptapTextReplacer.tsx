@@ -120,7 +120,7 @@ const TiptapTextReplacer: React.FC<TiptapTextReplacerProps> = ({
                   onContentChange(content, dataPath.path, slideIndex);
                 }
               }}
-              placeholder="Enter text..."
+              placeholder="在此输入文本…"
             />
           )
         );
@@ -156,7 +156,7 @@ const TiptapTextReplacer: React.FC<TiptapTextReplacerProps> = ({
                 onContentChange(content, dataPath, slideIndex);
               }
             }}
-            placeholder="Enter text..."
+            placeholder="在此输入文本…"
           />
         )
       );

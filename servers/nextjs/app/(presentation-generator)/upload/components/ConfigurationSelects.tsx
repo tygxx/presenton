@@ -123,7 +123,7 @@ const SlideCountSelect: React.FC<{
                             placeholder="--"
                             className="h-8 w-16 px-2 text-sm"
                         />
-                        <span className="text-sm font-medium">张
+                        <span className="text-sm font-medium">张</span>
                     </div>
                 </div>
                 <Command>
