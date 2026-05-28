@@ -21,6 +21,14 @@ const nextConfig = {
         destination: 'http://localhost:5000/app_data/fonts/:path*',
       },
       {
+        source: '/static/:path*',
+        destination: 'http://127.0.0.1:8000/static/:path*',
+      },
+      {
+        source: '/app_data/:path*',
+        destination: 'http://127.0.0.1:8000/app_data/:path*',
+      },
+      {
         source: '/api/v1/:path*',
         destination: 'http://127.0.0.1:8000/api/v1/:path*',
       },

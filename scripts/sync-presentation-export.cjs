@@ -27,7 +27,17 @@ const packageJsonFile = path.join(repoRoot, "package.json");
 const cacheDir = path.join(repoRoot, ".cache", "presentation-export");
 const exportRepoBase =
   "https://github.com/presenton/presenton-export/releases/download";
-const linuxAssetName = "export-Linux-X64.zip";
+
+function getPlatformAssetName() {
+  const platformArch = `${process.platform}-${process.arch}`;
+  if (platformArch === "linux-x64") return "export-Linux-X64.zip";
+  if (platformArch === "darwin-arm64") return "export-macOS-ARM64.zip";
+  if (platformArch === "win32-x64") return "export-Windows-X64.zip";
+
+  throw new Error(
+    `Unsupported export runtime platform: ${platformArch}. Supported: linux-x64, darwin-arm64, win32-x64`
+  );
+}
 
 const cliArgs = new Set(process.argv.slice(2));
 const forceDownload = cliArgs.has("--force");
@@ -124,11 +134,35 @@ function chmodIfPossible(filePath) {
 }
 
 function getConverterCandidates(baseDir = targetPyDir) {
-  return [
-    path.join(baseDir, "convert-linux-x64"),
-    path.join(baseDir, "convert-linux-amd64"),
-    path.join(baseDir, "convert"),
-  ];
+  const platformAliases = {
+    linux: ["linux"],
+    darwin: ["darwin", "macos", "mac"],
+    win32: ["win32", "windows", "win"],
+  };
+  const archAliases = {
+    x64: ["x64", "amd64"],
+    arm64: ["arm64", "aarch64"],
+  };
+
+  const platforms = platformAliases[process.platform] || [process.platform];
+  const archs = archAliases[process.arch] || [process.arch];
+  const windows = process.platform === "win32";
+
+  const candidates = [];
+  for (const p of platforms) {
+    for (const a of archs) {
+      candidates.push(path.join(baseDir, `convert-${p}-${a}`));
+      candidates.push(path.join(baseDir, `convert-${p}-${a}.exe`));
+    }
+    candidates.push(path.join(baseDir, `convert-${p}`));
+    candidates.push(path.join(baseDir, `convert-${p}.exe`));
+  }
+  if (windows) {
+    candidates.push(path.join(baseDir, "convert.exe"));
+  }
+  candidates.push(path.join(baseDir, "convert"));
+
+  return [...new Set(candidates)];
 }
 
 function hasRuntimeBundle(baseDir) {
@@ -271,10 +305,11 @@ function resolveExtractedRoot(extractDir) {
 
 async function downloadAndInstallRuntime() {
   const tag = await getTargetVersion();
-  const downloadUrl = `${exportRepoBase}/${tag}/${linuxAssetName}`;
+  const assetName = getPlatformAssetName();
+  const downloadUrl = `${exportRepoBase}/${tag}/${assetName}`;
 
   ensureDir(cacheDir);
-  const zipPath = path.join(cacheDir, linuxAssetName);
+  const zipPath = path.join(cacheDir, assetName);
   const extractDir = path.join(cacheDir, `extract-${Date.now()}`);
 
   console.log(`[presentation-export] Downloading ${downloadUrl}`);

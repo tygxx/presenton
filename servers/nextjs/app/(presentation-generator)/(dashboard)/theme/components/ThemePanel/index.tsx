@@ -10,7 +10,7 @@ import {
   ChevronRight,
   Plus
 } from 'lucide-react'
-import { Sheet, SheetContent } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 
 
 import { ThemeColors } from './types'
@@ -1058,6 +1058,7 @@ const ThemePanel: React.FC = () => {
 
 
         <SheetContent side="bottom" className="h-[90vh] font-syne w-full p-0 [&>button]:hidden focus:outline-none" >
+          <SheetTitle className="sr-only">主题编辑器</SheetTitle>
           <div className="flex h-full">
             {/* Left side - Editor */}
             <div
