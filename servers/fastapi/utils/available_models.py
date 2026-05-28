@@ -1,17 +1,25 @@
+import re
+
 import aiohttp
 from openai import AsyncOpenAI
 from google import genai
 
 
+_VERSION_SEGMENT_RE = re.compile(r"/v\d+(?:/|$)")
+
+
 def normalize_openai_compatible_base_url(url: str) -> str:
-    """Ensure base URL targets the OpenAI-compatible /v1 root (LiteLLM, vLLM, etc.)."""
+    """Ensure base URL targets an OpenAI-compatible versioned root.
+
+    If the URL already contains a `/v<digits>` segment (e.g. `/v1` for OpenAI,
+    `/v3` for Volcengine ARK), keep it as-is; otherwise append `/v1` so common
+    OpenAI-compatible proxies (LiteLLM, vLLM, …) resolve correctly.
+    """
     u = (url or "").strip().rstrip("/")
     if not u:
         return u
-    if u.endswith("/v1"):
-        return u
     base = u.split("?", 1)[0]
-    if "/v1" in base:
+    if _VERSION_SEGMENT_RE.search(base):
         return u
     return f"{u}/v1"
 
@@ -73,6 +81,24 @@ async def list_available_openai_compatible_models(url: str, api_key: str) -> lis
     if models:
         return [m.id for m in models if m.id]
     return []
+
+
+async def probe_openai_compatible_chat_completion(
+    url: str, api_key: str, model: str
+) -> None:
+    """Verify a (url, api_key, model) combo by sending a minimal chat completion.
+
+    Raises the underlying SDK exception if the call fails so callers can surface
+    the provider's error message verbatim.
+    """
+    base_url = normalize_openai_compatible_base_url(url)
+    effective_key = (api_key or "").strip() or "EMPTY"
+    client = AsyncOpenAI(api_key=effective_key, base_url=base_url)
+    await client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": "ping"}],
+        max_tokens=1,
+    )
 
 
 async def list_available_anthropic_models(api_key: str) -> list[str]:

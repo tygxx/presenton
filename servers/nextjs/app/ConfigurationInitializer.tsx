@@ -89,14 +89,9 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
             return;
           }
         }
-        if (llmConfig.LLM === 'custom') {
-          const isAvailable = await checkIfSelectedCustomModelIsAvailable(llmConfig);
-          if (!isAvailable) {
-            router.push('/');
-            setLoadingToFalseAfterNavigatingTo('/');
-            return;
-          }
-        }
+        // Custom providers may not expose /models (e.g. Volcengine ARK coding plan);
+        // probe-on-save in OnBoarding is the single source of truth — trust the saved
+        // config here instead of pinging the LLM on every page load.
         if (route === '/') {
           router.push('/upload');
           setLoadingToFalseAfterNavigatingTo('/upload');
@@ -116,27 +111,6 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
       } else {
         setIsLoading(false);
       }
-    }
-  }
-
-
-  const checkIfSelectedCustomModelIsAvailable = async (llmConfig: LLMConfig) => {
-    try {
-      const response = await fetch(getApiUrl('/api/v1/ppt/openai/models/available'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: llmConfig.CUSTOM_LLM_URL,
-          api_key: llmConfig.CUSTOM_LLM_API_KEY,
-        }),
-      });
-      const data = await response.json();
-      return data.includes(llmConfig.CUSTOM_MODEL);
-    } catch (error) {
-      console.error('Error fetching custom models:', error);
-      return false;
     }
   }
 

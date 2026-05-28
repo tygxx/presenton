@@ -645,15 +645,32 @@ const TextProvider = ({ onInputChange, llmConfig }: OpenAIConfigProps) => {
                   </>
                 )}
                 {selectedProvider === "custom" && (
-                  <input
-                    type="text"
-                    value={currentCustomUrl}
-                    onChange={(e) =>
-                      onInputChange(e.target.value, "CUSTOM_LLM_URL")
-                    }
-                    className="w-full mt-2 px-2 py-3 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                    placeholder="OpenAI 兼容的接口地址"
-                  />
+                  <>
+                    <input
+                      type="text"
+                      value={currentCustomUrl}
+                      onChange={(e) =>
+                        onInputChange(e.target.value, "CUSTOM_LLM_URL")
+                      }
+                      className="w-full mt-2 px-2 py-3 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                      placeholder="OpenAI 兼容的接口地址，例如 https://ark.cn-beijing.volces.com/api/coding/v3"
+                    />
+                    <label className="mt-3 block text-sm font-medium text-gray-700 mb-2">
+                      模型 ID（手动填写）
+                    </label>
+                    <input
+                      type="text"
+                      value={(llmConfig.CUSTOM_MODEL as string) || ""}
+                      onChange={(e) =>
+                        onInputChange(e.target.value, "CUSTOM_MODEL")
+                      }
+                      className="w-full px-2 py-3 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                      placeholder="例如 doubao-seed-2.0-code、deepseek-v3.2"
+                    />
+                    <p className="mt-1.5 text-xs text-gray-500">
+                      若服务商不暴露 /models 接口（如火山方舟 coding plan），直接在此填写模型 ID 即可，无需点击下方"检测可用模型"。
+                    </p>
+                  </>
                 )}
                 {selectedProvider === "litellm" && (
                   <>

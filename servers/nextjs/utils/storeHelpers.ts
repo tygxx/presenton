@@ -314,10 +314,27 @@ export const handleSaveLLMConfig = async (llmConfig: LLMConfig) => {
   if (typeof window !== "undefined" && window.electron?.setUserConfig) {
     await window.electron.setUserConfig(normalizedConfig);
   } else {
-    await fetch("/api/user-config", {
+    const resp = await fetch("/api/user-config", {
       method: "POST",
       body: JSON.stringify(normalizedConfig),
     });
+    if (!resp.ok) {
+      let detail = "";
+      try {
+        const data = await resp.json();
+        detail =
+          typeof data?.error === "string"
+            ? data.error
+            : typeof data?.detail === "string"
+              ? data.detail
+              : JSON.stringify(data);
+      } catch {
+        detail = await resp.text();
+      }
+      throw new Error(
+        `保存配置失败 (HTTP ${resp.status})：${detail || "请检查服务端日志，可能缺少 USER_CONFIG_PATH 环境变量。"}`
+      );
+    }
   }
 
   store.dispatch(setLLMConfig(normalizedConfig));

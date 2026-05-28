@@ -439,7 +439,39 @@ const PresentonMode = ({ currentStep, setStep }: { currentStep: number, setStep:
                 notify.warning("暂时无法保存", validationError);
                 return;
             }
-            setSavingConfig(true);
+
+            if (llmConfig.LLM === 'custom' && llmConfig.CUSTOM_LLM_URL && llmConfig.CUSTOM_MODEL) {
+                setSavingConfig(true);
+                try {
+                    const probeResp = await fetch(getApiUrl('/api/v1/ppt/openai/models/probe'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            url: llmConfig.CUSTOM_LLM_URL,
+                            api_key: llmConfig.CUSTOM_LLM_API_KEY || '',
+                            model: llmConfig.CUSTOM_MODEL,
+                        }),
+                    });
+                    if (!probeResp.ok) {
+                        let detail = '';
+                        try {
+                            const data = await probeResp.json();
+                            detail = typeof data?.detail === 'string' ? data.detail : JSON.stringify(data);
+                        } catch {
+                            detail = await probeResp.text();
+                        }
+                        notify.error('模型校验失败', `服务商未能用此模型回复测试请求：${detail}`);
+                        setSavingConfig(false);
+                        return;
+                    }
+                } catch (probeError) {
+                    notify.error('模型校验失败', probeError instanceof Error ? probeError.message : '无法连接到自定义接口');
+                    setSavingConfig(false);
+                    return;
+                }
+            } else {
+                setSavingConfig(true);
+            }
 
             await handleSaveLLMConfig(llmConfig);
 
@@ -763,16 +795,34 @@ const PresentonMode = ({ currentStep, setStep }: { currentStep: number, setStep:
                                 </>
                             )}
                             {llmConfig.LLM === 'custom' && (
-                                <input
-                                    type="text"
-                                    value={llmConfig.CUSTOM_LLM_URL}
-                                    onChange={(e) => setLlmConfig(prev => ({
-                                        ...prev,
-                                        CUSTOM_LLM_URL: e.target.value
-                                    }))}
-                                    className="w-full mt-2 px-2 py-3 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-                                    placeholder="OpenAI 兼容的 URL"
-                                />
+                                <>
+                                    <input
+                                        type="text"
+                                        value={llmConfig.CUSTOM_LLM_URL}
+                                        onChange={(e) => setLlmConfig(prev => ({
+                                            ...prev,
+                                            CUSTOM_LLM_URL: e.target.value
+                                        }))}
+                                        className="w-full mt-2 px-2 py-3 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                                        placeholder="OpenAI 兼容的 URL，例如 https://ark.cn-beijing.volces.com/api/coding/v3"
+                                    />
+                                    <label className="mt-3 block text-sm font-medium text-gray-700 mb-2">
+                                        模型 ID（手动填写）
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={llmConfig.CUSTOM_MODEL || ''}
+                                        onChange={(e) => setLlmConfig(prev => ({
+                                            ...prev,
+                                            CUSTOM_MODEL: e.target.value
+                                        }))}
+                                        className="w-full px-2 py-3 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                                        placeholder="例如 doubao-seed-2.0-code、deepseek-v3.2"
+                                    />
+                                    <p className="mt-1.5 text-xs text-gray-500">
+                                        若服务商不暴露 /models 接口（如火山方舟 coding plan），直接在此填写模型 ID 即可，无需点击下方"校验并加载模型"。
+                                    </p>
+                                </>
                             )}
                             {llmConfig.LLM === 'litellm' && (
                                 <>

@@ -289,6 +289,28 @@ def format_json_path(path: List[Any]) -> str:
     return formatted
 
 
+def relax_length_constraints(schema: dict) -> dict[str, Any]:
+    """Strip length / item-count bounds (minLength, maxLength, minItems, maxItems)
+    from a schema. Providers without native structured output (e.g. Volcengine ARK
+    GLM/Doubao) cannot reliably honor these, so enforcing them only triggers endless
+    validation-retry loops. The bounds remain in the prompt as guidance; we just
+    don't fail validation over them."""
+    _LENGTH_KEYS = {"minLength", "maxLength", "minItems", "maxItems"}
+
+    def _strip(node: Any) -> Any:
+        if isinstance(node, dict):
+            return {
+                key: _strip(value)
+                for key, value in node.items()
+                if key not in _LENGTH_KEYS
+            }
+        if isinstance(node, list):
+            return [_strip(item) for item in node]
+        return node
+
+    return _strip(deepcopy(schema))
+
+
 def get_schema_validation_errors(
     schema: dict,
     instance: Any,
