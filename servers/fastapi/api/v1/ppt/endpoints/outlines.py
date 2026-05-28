@@ -2,7 +2,6 @@ import asyncio
 import json
 import traceback
 import uuid
-import dirtyjson
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +20,7 @@ from services.documents_loader import DocumentsLoader
 from services.mem0_presentation_memory_service import (
     MEM0_PRESENTATION_MEMORY_SERVICE,
 )
-from utils.llm_utils import message_content_to_text
+from utils.llm_utils import extract_structured_content, message_content_to_text
 from utils.outline_utils import (
     get_no_of_outlines_to_generate_for_n_slides,
     get_presentation_title_from_presentation_outline,
@@ -127,9 +126,13 @@ async def stream_outlines(
             presentation_outlines_text += chunk
 
         try:
-            presentation_outlines_json = dict(
-                dirtyjson.loads(presentation_outlines_text)
+            presentation_outlines_json = extract_structured_content(
+                presentation_outlines_text
             )
+            if not isinstance(presentation_outlines_json, dict):
+                raise ValueError(
+                    "LLM did not return a valid outline JSON object"
+                )
         except Exception as e:
             traceback.print_exc()
             yield SSEErrorResponse(

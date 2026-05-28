@@ -231,14 +231,16 @@ def extract_text(content: Any) -> Optional[str]:
 
 
 _CODE_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL | re.IGNORECASE)
+_THINK_BLOCK_RE = re.compile(r"<think\b[^>]*>.*?</think>", re.DOTALL | re.IGNORECASE)
 
 
 def _strip_to_json_payload(raw_text: str) -> str:
     """Best-effort extraction of a JSON object/array from model output that may be
-    wrapped in a markdown code fence or padded with prose. Common with providers
-    that lack native structured output (e.g. Volcengine ARK GLM/Doubao), which often
-    answer with ```json ... ``` or a leading sentence before the JSON."""
-    text = raw_text.strip()
+    wrapped in a markdown code fence, padded with prose, or prefixed by a
+    `<think>...</think>` reasoning block. Common with providers lacking native
+    structured output (Volcengine ARK GLM/Doubao) or reasoning models proxied
+    through OpenAI-compatible gateways (e.g. gpt-5.x that emit <think> inline)."""
+    text = _THINK_BLOCK_RE.sub("", raw_text).strip()
     fence_match = _CODE_FENCE_RE.search(text)
     if fence_match:
         candidate = fence_match.group(1).strip()
