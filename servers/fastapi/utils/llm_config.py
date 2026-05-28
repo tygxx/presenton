@@ -326,7 +326,7 @@ def get_llm_config() -> ClientConfig:
                     detail="Custom LLM URL is not set",
                 )
             return OpenAIClientConfig(
-                base_url=base_url,
+                base_url=normalize_openai_compatible_base_url(base_url),
                 api_key=get_custom_llm_api_key_env() or "null",
             )
         case LLMProvider.CODEX:
