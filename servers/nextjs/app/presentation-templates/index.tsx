@@ -75,6 +75,17 @@ import PitchDeckHorizontalTimeline, { Schema as PitchDeckHorizontalTimelineSchem
 import PitchDeckOverlappingCircleCards, { Schema as PitchDeckOverlappingCircleCardsSchema, slideLayoutId as PitchDeckOverlappingCircleCardsId, slideLayoutName as PitchDeckOverlappingCircleCardsName, slideLayoutDescription as PitchDeckOverlappingCircleCardsDesc } from "./pitch-deck/OverlappingCircleCards";
 
 // General templates
+// 商务路演 Pro 版式组
+import BizCover, { Schema as BizCoverSchema, layoutId as BizCoverId, layoutName as BizCoverName, layoutDescription as BizCoverDesc } from "./biz-pitch-pro/CoverSlideLayout";
+import BizAgenda, { Schema as BizAgendaSchema, layoutId as BizAgendaId, layoutName as BizAgendaName, layoutDescription as BizAgendaDesc } from "./biz-pitch-pro/AgendaSlideLayout";
+import BizSection, { Schema as BizSectionSchema, layoutId as BizSectionId, layoutName as BizSectionName, layoutDescription as BizSectionDesc } from "./biz-pitch-pro/SectionDividerLayout";
+import BizThreePoints, { Schema as BizThreePointsSchema, layoutId as BizThreePointsId, layoutName as BizThreePointsName, layoutDescription as BizThreePointsDesc } from "./biz-pitch-pro/ThreePointsLayout";
+import BizKpi, { Schema as BizKpiSchema, layoutId as BizKpiId, layoutName as BizKpiName, layoutDescription as BizKpiDesc } from "./biz-pitch-pro/KpiMetricsLayout";
+import BizComparison, { Schema as BizComparisonSchema, layoutId as BizComparisonId, layoutName as BizComparisonName, layoutDescription as BizComparisonDesc } from "./biz-pitch-pro/ComparisonLayout";
+import BizTimeline, { Schema as BizTimelineSchema, layoutId as BizTimelineId, layoutName as BizTimelineName, layoutDescription as BizTimelineDesc } from "./biz-pitch-pro/TimelineLayout";
+import BizImageText, { Schema as BizImageTextSchema, layoutId as BizImageTextId, layoutName as BizImageTextName, layoutDescription as BizImageTextDesc } from "./biz-pitch-pro/ImageTextLayout";
+import BizDataChart, { Schema as BizDataChartSchema, layoutId as BizDataChartId, layoutName as BizDataChartName, layoutDescription as BizDataChartDesc } from "./biz-pitch-pro/DataChartLayout";
+import BizClosing, { Schema as BizClosingSchema, layoutId as BizClosingId, layoutName as BizClosingName, layoutDescription as BizClosingDesc } from "./biz-pitch-pro/ClosingContactLayout";
 import GeneralIntroSlideLayout, { Schema as GeneralIntroSchema, layoutId as GeneralIntroId, layoutName as GeneralIntroName, layoutDescription as GeneralIntroDesc } from "./general/IntroSlideLayout";
 import BasicInfoSlideLayout, { Schema as BasicInfoSchema, layoutId as BasicInfoId, layoutName as BasicInfoName, layoutDescription as BasicInfoDesc } from "./general/BasicInfoSlideLayout";
 import BulletIconsOnlySlideLayout, { Schema as BulletIconsOnlySchema, layoutId as BulletIconsOnlyId, layoutName as BulletIconsOnlyName, layoutDescription as BulletIconsOnlyDesc } from "./general/BulletIconsOnlySlideLayout";
@@ -238,6 +249,7 @@ import TitleDescriptionFourChartsSixBulletsLayout, { Schema as TitleDescriptionF
 
 // TODO: Step 2: Import template settings Here (like the ones below)
 // Template template settings
+import bizPitchProSettings from "./biz-pitch-pro/settings.json";
 import generalSettings from "./general/settings.json";
 import modernSettings from "./modern/settings.json";
 import standardSettings from "./standard/settings.json";
@@ -434,6 +446,19 @@ export const neoSwiftTemplates: TemplateWithData[] = [
 ]
 
 // General templates array
+export const bizPitchProTemplates: TemplateWithData[] = [
+    createTemplateEntry(BizCover, BizCoverSchema, BizCoverId, BizCoverName, BizCoverDesc, "biz-pitch-pro", "CoverSlideLayout"),
+    createTemplateEntry(BizAgenda, BizAgendaSchema, BizAgendaId, BizAgendaName, BizAgendaDesc, "biz-pitch-pro", "AgendaSlideLayout"),
+    createTemplateEntry(BizSection, BizSectionSchema, BizSectionId, BizSectionName, BizSectionDesc, "biz-pitch-pro", "SectionDividerLayout"),
+    createTemplateEntry(BizThreePoints, BizThreePointsSchema, BizThreePointsId, BizThreePointsName, BizThreePointsDesc, "biz-pitch-pro", "ThreePointsLayout"),
+    createTemplateEntry(BizKpi, BizKpiSchema, BizKpiId, BizKpiName, BizKpiDesc, "biz-pitch-pro", "KpiMetricsLayout"),
+    createTemplateEntry(BizComparison, BizComparisonSchema, BizComparisonId, BizComparisonName, BizComparisonDesc, "biz-pitch-pro", "ComparisonLayout"),
+    createTemplateEntry(BizTimeline, BizTimelineSchema, BizTimelineId, BizTimelineName, BizTimelineDesc, "biz-pitch-pro", "TimelineLayout"),
+    createTemplateEntry(BizImageText, BizImageTextSchema, BizImageTextId, BizImageTextName, BizImageTextDesc, "biz-pitch-pro", "ImageTextLayout"),
+    createTemplateEntry(BizDataChart, BizDataChartSchema, BizDataChartId, BizDataChartName, BizDataChartDesc, "biz-pitch-pro", "DataChartLayout"),
+    createTemplateEntry(BizClosing, BizClosingSchema, BizClosingId, BizClosingName, BizClosingDesc, "biz-pitch-pro", "ClosingContactLayout"),
+];
+
 export const generalTemplates: TemplateWithData[] = [
 
     createTemplateEntry(GeneralIntroSlideLayout, GeneralIntroSchema, GeneralIntroId, GeneralIntroName, GeneralIntroDesc, "general", "IntroSlideLayout"),
@@ -496,6 +521,7 @@ export const swiftTemplates: TemplateWithData[] = [
 // TODO: Step 4: Combine all templates into a single array For UseCases (like the ones below)
 // All templates combined
 export const allLayouts: TemplateWithData[] = [
+    ...bizPitchProTemplates,
     ...neoGeneralTemplates,
     ...neoModernTemplates,
     ...neoStandardTemplates,
@@ -515,6 +541,13 @@ export const allLayouts: TemplateWithData[] = [
 // TODO: Step 5: Combine all templates into a single array For UseCases (like the ones below)
 // For UseCases we need to combine all templates into a single array with settings
 export const templates: TemplateLayoutsWithSettings[] = [
+    {
+        id: "biz-pitch-pro",
+        name: "商务路演 Pro",
+        description: bizPitchProSettings.description,
+        settings: bizPitchProSettings as TemplateGroupSettings,
+        layouts: bizPitchProTemplates,
+    },
     {
         id: "general",
         name: "General",
