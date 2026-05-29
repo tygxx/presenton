@@ -201,5 +201,345 @@ export const DEFAULT_THEMES: any[] = [
         }
       }
     }
+  },
+  {
+    id: "deep-ocean",
+    name: "深海蓝",
+    description: "深蓝配青，清爽专业，适合科技与企业场景。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#1d4ed8",
+        background: "#ffffff",
+        card: "#eef2ff",
+        stroke: "#d6dcee",
+        primary_text: "#ffffff",
+        background_text: "#0f1b3d",
+        graph_0: "#1d4ed8",
+        graph_1: "#0d9488",
+        graph_2: "#6366f1",
+        graph_3: "#0ea5e9",
+        graph_4: "#14b8a6",
+        graph_5: "#8b5cf6",
+        graph_6: "#f59e0b",
+        graph_7: "#ef4444",
+        graph_8: "#22c55e",
+        graph_9: "#64748b"
+      },
+      fonts: {
+        textFont: {
+          name: "Inter",
+          url: "https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "graphite-tech",
+    name: "石墨科技",
+    description: "近黑底配电光青，暗色科技感，适合互联网产品。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#22d3ee",
+        background: "#0d1117",
+        card: "#161b22",
+        stroke: "#2a313c",
+        primary_text: "#04141a",
+        background_text: "#e6edf3",
+        graph_0: "#22d3ee",
+        graph_1: "#3b82f6",
+        graph_2: "#a78bfa",
+        graph_3: "#f472b6",
+        graph_4: "#2dd4bf",
+        graph_5: "#38bdf8",
+        graph_6: "#818cf8",
+        graph_7: "#a3e635",
+        graph_8: "#fbbf24",
+        graph_9: "#fb7185"
+      },
+      fonts: {
+        textFont: {
+          name: "Montserrat",
+          url: "https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "emerald-finance",
+    name: "翡翠金融",
+    description: "祖母绿配金，奶白衬线，高端稳重，适合金融与投资。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#047857",
+        background: "#fbfaf7",
+        card: "#eaf2ec",
+        stroke: "#d8d2c4",
+        primary_text: "#ffffff",
+        background_text: "#14271f",
+        graph_0: "#047857",
+        graph_1: "#c79a3a",
+        graph_2: "#0d9488",
+        graph_3: "#65a30d",
+        graph_4: "#15803d",
+        graph_5: "#d97706",
+        graph_6: "#4d7c5a",
+        graph_7: "#92722a",
+        graph_8: "#5b6b63",
+        graph_9: "#1e3a2f"
+      },
+      fonts: {
+        textFont: {
+          name: "Lora",
+          url: "https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "warm-sun",
+    name: "暖阳橙",
+    description: "暖橙圆体，亲和活力，适合教育与培训。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#c2410c",
+        background: "#fffaf3",
+        card: "#ffedd5",
+        stroke: "#f0d9bf",
+        primary_text: "#ffffff",
+        background_text: "#3d2510",
+        graph_0: "#ea580c",
+        graph_1: "#f59e0b",
+        graph_2: "#0d9488",
+        graph_3: "#eab308",
+        graph_4: "#dc2626",
+        graph_5: "#16a34a",
+        graph_6: "#b45309",
+        graph_7: "#0ea5e9",
+        graph_8: "#e11d48",
+        graph_9: "#84cc16"
+      },
+      fonts: {
+        textFont: {
+          name: "Nunito",
+          url: "https://fonts.googleapis.com/css2?family=Nunito:wght@200..1000&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "clinical-teal",
+    name: "临床青",
+    description: "青绿配纯白，干净专业，适合医疗与健康。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#0f766e",
+        background: "#ffffff",
+        card: "#e6f5f3",
+        stroke: "#cfe6e2",
+        primary_text: "#ffffff",
+        background_text: "#0f2e2a",
+        graph_0: "#0f766e",
+        graph_1: "#2563eb",
+        graph_2: "#16a34a",
+        graph_3: "#06b6d4",
+        graph_4: "#4f46e5",
+        graph_5: "#0ea5e9",
+        graph_6: "#10b981",
+        graph_7: "#64748b",
+        graph_8: "#7c3aed",
+        graph_9: "#f59e0b"
+      },
+      fonts: {
+        textFont: {
+          name: "Open Sans",
+          url: "https://fonts.googleapis.com/css2?family=Open+Sans:wght@300..800&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "govern-red",
+    name: "政务正红",
+    description: "中国红配金，米白底，庄重权威，适合政务与汇报。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#c8102e",
+        background: "#fffdf9",
+        card: "#fbeaec",
+        stroke: "#e8d9c8",
+        primary_text: "#ffffff",
+        background_text: "#1f1a17",
+        graph_0: "#c8102e",
+        graph_1: "#b8860b",
+        graph_2: "#8c0d22",
+        graph_3: "#d4a017",
+        graph_4: "#6b7280",
+        graph_5: "#1e3a5f",
+        graph_6: "#7f1d1d",
+        graph_7: "#a16207",
+        graph_8: "#44403c",
+        graph_9: "#4d7c0f"
+      },
+      fonts: {
+        textFont: {
+          name: "Source Sans Pro",
+          url: "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200..900&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "twilight-purple",
+    name: "暮光紫",
+    description: "紫罗兰配品红，时尚活泼，适合营销与创意。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#7c3aed",
+        background: "#ffffff",
+        card: "#f3e8ff",
+        stroke: "#e4d4f4",
+        primary_text: "#ffffff",
+        background_text: "#2a1245",
+        graph_0: "#7c3aed",
+        graph_1: "#db2777",
+        graph_2: "#2563eb",
+        graph_3: "#ec4899",
+        graph_4: "#4f46e5",
+        graph_5: "#c026d3",
+        graph_6: "#0ea5e9",
+        graph_7: "#f43f5e",
+        graph_8: "#14b8a6",
+        graph_9: "#f59e0b"
+      },
+      fonts: {
+        textFont: {
+          name: "Raleway",
+          url: "https://fonts.googleapis.com/css2?family=Raleway:wght@100..900&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "midnight-neon",
+    name: "午夜霓虹",
+    description: "深空底配霓虹粉青，炫酷未来，适合发布会。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#ff2d95",
+        background: "#0a0a12",
+        card: "#15151f",
+        stroke: "#2a2a3a",
+        primary_text: "#12030a",
+        background_text: "#f0eefb",
+        graph_0: "#ff2d95",
+        graph_1: "#22d3ee",
+        graph_2: "#a78bfa",
+        graph_3: "#a3e635",
+        graph_4: "#3b82f6",
+        graph_5: "#e879f9",
+        graph_6: "#2dd4bf",
+        graph_7: "#fbbf24",
+        graph_8: "#38bdf8",
+        graph_9: "#fb7185"
+      },
+      fonts: {
+        textFont: {
+          name: "Kanit",
+          url: "https://fonts.googleapis.com/css2?family=Kanit:wght@100..900&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "ink-wash",
+    name: "墨韵",
+    description: "宣纸墨黑配朱砂，水墨国潮，适合文化与国风。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#9d2933",
+        background: "#f5f1e6",
+        card: "#ece4d2",
+        stroke: "#d8cbb0",
+        primary_text: "#f5f1e6",
+        background_text: "#1c1a17",
+        graph_0: "#1c1a17",
+        graph_1: "#9d2933",
+        graph_2: "#8a6d3b",
+        graph_3: "#3a5a6b",
+        graph_4: "#5e7355",
+        graph_5: "#7a5230",
+        graph_6: "#595550",
+        graph_7: "#b8860b",
+        graph_8: "#4a3b52",
+        graph_9: "#2f4538"
+      },
+      fonts: {
+        textFont: {
+          name: "Fraunces",
+          url: "https://fonts.googleapis.com/css2?family=Fraunces:wght@300..900&display=swap"
+        }
+      }
+    }
+  },
+  {
+    id: "data-indigo",
+    name: "数据靛蓝",
+    description: "靛蓝配多彩图表色，适合数据报告与年报。",
+    logo: null,
+    logo_url: null,
+    company_name: null,
+    data: {
+      colors: {
+        primary: "#4338ca",
+        background: "#ffffff",
+        card: "#eef2ff",
+        stroke: "#d8ddf0",
+        primary_text: "#ffffff",
+        background_text: "#15183a",
+        graph_0: "#4338ca",
+        graph_1: "#059669",
+        graph_2: "#f59e0b",
+        graph_3: "#e11d48",
+        graph_4: "#0ea5e9",
+        graph_5: "#7c3aed",
+        graph_6: "#0d9488",
+        graph_7: "#ea580c",
+        graph_8: "#2563eb",
+        graph_9: "#db2777"
+      },
+      fonts: {
+        textFont: {
+          name: "DM Sans",
+          url: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
+        }
+      }
+    }
   }
 ]
