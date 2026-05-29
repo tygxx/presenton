@@ -51,7 +51,7 @@ export default function BedrockManualFields({
   return (
     <div className="mt-3 w-full min-w-0 max-w-full space-y-4">
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-gray-700">Model</label>
+        <label className="block text-sm font-medium text-gray-700">模型</label>
         <input
           type="text"
           value={llmConfig.BEDROCK_MODEL || ''}
@@ -62,7 +62,7 @@ export default function BedrockManualFields({
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-gray-700">Region</label>
+        <label className="block text-sm font-medium text-gray-700">区域</label>
         <input
           type="text"
           value={llmConfig.BEDROCK_REGION || ''}
@@ -74,14 +74,14 @@ export default function BedrockManualFields({
 
       <div className="space-y-1.5">
         <label className="block text-sm font-medium text-gray-700">
-          Bedrock API key (optional)
+          Bedrock API 密钥(选填)
         </label>
         <input
           type="password"
           value={llmConfig.BEDROCK_API_KEY || ''}
           onChange={(e) => onPatch({ BEDROCK_API_KEY: e.target.value })}
           className={inputClass}
-          placeholder="Use this OR AWS access keys below"
+          placeholder="使用此密钥,或使用下方的 AWS 访问密钥"
         />
       </div>
 
@@ -92,7 +92,7 @@ export default function BedrockManualFields({
           value={llmConfig.BEDROCK_AWS_ACCESS_KEY_ID || ''}
           onChange={(e) => onPatch({ BEDROCK_AWS_ACCESS_KEY_ID: e.target.value })}
           className={inputClass}
-          placeholder="Use with AWS Secret Access Key"
+          placeholder="与 AWS Secret Access Key 搭配使用"
         />
       </div>
 
@@ -105,12 +105,12 @@ export default function BedrockManualFields({
           value={llmConfig.BEDROCK_AWS_SECRET_ACCESS_KEY || ''}
           onChange={(e) => onPatch({ BEDROCK_AWS_SECRET_ACCESS_KEY: e.target.value })}
           className={inputClass}
-          placeholder="Use with AWS Access Key ID"
+          placeholder="与 AWS Access Key ID 搭配使用"
         />
       </div>
 
       <p className="text-xs text-gray-500">
-        Authentication: set either Bedrock API key, or AWS access key ID + secret key.
+        认证方式:可填写 Bedrock API 密钥,或填写 AWS Access Key ID + Secret Access Key。
       </p>
 
       <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
@@ -119,7 +119,7 @@ export default function BedrockManualFields({
             type="button"
             className="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-gray-200 bg-[#F9F9FA] px-3 py-2.5 text-left text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100"
           >
-            <span>Advanced settings</span>
+            <span>高级设置</span>
             <ChevronDown
               className={cn(
                 'h-4 w-4 shrink-0 text-gray-600 transition-transform duration-200',
@@ -140,7 +140,7 @@ export default function BedrockManualFields({
                 value={llmConfig.BEDROCK_AWS_SESSION_TOKEN || ''}
                 onChange={(e) => onPatch({ BEDROCK_AWS_SESSION_TOKEN: e.target.value })}
                 className={inputClass}
-                placeholder="Optional"
+                placeholder="选填"
               />
             </div>
             <div className="space-y-1.5">
@@ -152,7 +152,7 @@ export default function BedrockManualFields({
                 value={llmConfig.BEDROCK_PROFILE_NAME || ''}
                 onChange={(e) => onPatch({ BEDROCK_PROFILE_NAME: e.target.value })}
                 className={inputClass}
-                placeholder="Optional"
+                placeholder="选填"
               />
             </div>
           </div>

@@ -37,8 +37,8 @@ import { MixpanelEvent, trackEvent } from '@/utils/mixpanel'
 // Fallback theme used before defaults are loaded from API (unified Theme type)
 const FALLBACK_THEME: Theme = {
   id: 'standard',
-  name: 'Standard',
-  description: 'Standard theme',
+  name: '标准',
+  description: '标准主题',
   user: 'system',
   logo: '',
   logo_url: '',
@@ -365,8 +365,8 @@ const ThemePanel: React.FC = () => {
     setIsNewTheme(true)
     const newTheme: Theme = {
       id: `custom-${Date.now()}`,
-      name: 'New Custom Theme',
-      description: 'Start with a blank canvas',
+      name: '新建自定义主题',
+      description: '从空白开始创建',
       user: 'local',
       logo: '',
       logo_url: '',
@@ -588,7 +588,7 @@ const ThemePanel: React.FC = () => {
     >
       <Label className="flex text-xl font-medium text-[#191919] items-center gap-2 pb-5">
 
-        {step === 1 ? 'Brand Colors' : 'Palette'}
+        {step === 1 ? '品牌色' : '配色方案'}
         <RefreshCcw onClick={() => refeshTheme(step === 1 ? {
 
         } : {

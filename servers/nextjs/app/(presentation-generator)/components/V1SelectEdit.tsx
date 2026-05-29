@@ -550,7 +550,7 @@ const HtmlSelectionEditor = ({
   const handleSubmitEdit = useCallback(async () => {
     try {
       if (promptValue.trim().length === 0) {
-        toast.error("Please enter a prompt to edit the selection");
+        toast.error("请输入修改指令以编辑所选内容");
         return;
       }
       setUpdatingSelection(true);
@@ -582,15 +582,15 @@ const HtmlSelectionEditor = ({
       setSelectionRects([]);
       setInputPos(null);
 
-      toast.success("Selection edited successfully", {
-        description: "The selection has been edited successfully",
+      toast.success("所选内容已编辑", {
+        description: "所选内容已成功编辑",
       });
     } catch (error: any) {
       setUpdatingSelection(false);
       console.error("error in editing selection HTML", error);
-      toast.error("Error editing selection HTML", {
+      toast.error("编辑所选内容时出错", {
         description:
-          error?.message || "The selection has not been edited successfully",
+          error?.message || "所选内容未能成功编辑",
       });
     }
   }, [

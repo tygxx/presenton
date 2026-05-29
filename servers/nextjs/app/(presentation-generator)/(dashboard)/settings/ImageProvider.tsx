@@ -377,7 +377,7 @@ const ImageProvider = ({ llmConfig, setLlmConfig }: { llmConfig: LLMConfig, setL
                             )}
                             {llmConfig.IMAGE_PROVIDER === "comfyui" && <div className='w-full'>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Workflow JSON
+                                    工作流 JSON
                                 </label>
                                 <div className="relative">
                                     <textarea

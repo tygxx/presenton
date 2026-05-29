@@ -433,7 +433,7 @@ const formatTraceActivity = (
 
   if (trace.tool && trace.status === "start") {
     return {
-      label: `Running ${getToolLabel(trace.tool)}...`,
+      label: `正在执行${getToolLabel(trace.tool)}…`,
       kind: trace.kind,
       round: trace.round,
       tool: trace.tool,
@@ -443,7 +443,7 @@ const formatTraceActivity = (
 
   if (trace.tool && trace.status === "success") {
     return {
-      label: `${getToolLabel(trace.tool)} completed.`,
+      label: `${getToolLabel(trace.tool)}已完成。`,
       kind: trace.kind,
       round: trace.round,
       tool: trace.tool,
@@ -453,7 +453,7 @@ const formatTraceActivity = (
 
   if (trace.tool && trace.status === "error") {
     return {
-      label: `${getToolLabel(trace.tool)} failed.`,
+      label: `${getToolLabel(trace.tool)}执行失败。`,
       kind: trace.kind,
       round: trace.round,
       tool: trace.tool,
@@ -467,9 +467,9 @@ const formatTraceActivity = (
     trace.tools.length
   ) {
     return {
-      label: `Planning tools: ${trace.tools
+      label: `规划工具：${trace.tools
         .map((tool) => getToolLabel(tool))
-        .join(", ")}.`,
+        .join("、")}。`,
       kind: trace.kind,
       round: trace.round,
       state: "info",

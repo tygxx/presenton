@@ -106,18 +106,18 @@ export default function LLMProviderSelection({
         needsOpenWebUIImageUrl ||
         needsOpenAICompatImageConfig,
       text: needsModelSelection
-        ? "Please Select a Model"
+        ? "请选择模型"
         : needsApiKey
-          ? "Please Enter API Key"
+          ? "请输入 API 密钥"
           : needsOllamaUrl
-            ? "Please Enter Ollama URL"
+            ? "请输入 Ollama 地址"
             : needsComfyUIConfig
-              ? "Please Configure ComfyUI"
+              ? "请配置 ComfyUI"
               : needsOpenWebUIImageUrl
-                ? "Please Enter Open WebUI URL"
+                ? "请输入 Open WebUI 地址"
                 : needsOpenAICompatImageConfig
-                  ? "Please Configure Custom Image API"
-                  : "Save Configuration",
+                  ? "请配置自定义图像 API"
+                  : "保存配置",
       showProgress: false,
     });
   }, [llmConfig]);
@@ -249,7 +249,7 @@ export default function LLMProviderSelection({
             <TabsTrigger value="google">Google</TabsTrigger>
             <TabsTrigger value="anthropic">Anthropic</TabsTrigger>
             <TabsTrigger value="ollama">Ollama</TabsTrigger>
-            <TabsTrigger value="custom">Custom</TabsTrigger>
+            <TabsTrigger value="custom">自定义</TabsTrigger>
             <TabsTrigger value="codex">ChatGPT</TabsTrigger>
           </TabsList>
         </Tabs>

@@ -90,15 +90,15 @@ export default function OpenAICompatibleImageFields({
         setModels([]);
         setModelsChecked(true);
         notify.error(
-          "Could not load models",
-          "The server could not list models. Check your API key or endpoint and try again."
+          "无法加载模型列表",
+          "服务器未能返回模型列表。请检查 API 密钥或接口地址后重试。"
         );
       }
     } catch (error) {
       console.error("Error fetching models:", error);
       notify.error(
-        "Could not load models",
-        "Something went wrong while contacting the provider. Check your network and try again."
+        "无法加载模型列表",
+        "连接服务商时出现问题。请检查网络后重试。"
       );
       setModels([]);
       setModelsChecked(true);
@@ -117,14 +117,14 @@ export default function OpenAICompatibleImageFields({
       <div className="flex shrink-0 flex-col items-end gap-4">
         <div className="relative flex w-[222px] min-w-0 max-w-full shrink-0 flex-col items-end justify-end">
           <div className="flex w-full flex-col justify-start">
-            <label className="mb-2 block text-sm font-medium text-gray-700">Image API key</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">图像 API 密钥</label>
             <div className="relative">
               <input
                 type={showApiKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => onApiKeyChange(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-2 py-3 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                placeholder="Key for your image endpoint"
+                placeholder="图像接口的密钥"
               />
               <button
                 type="button"
@@ -139,7 +139,7 @@ export default function OpenAICompatibleImageFields({
               value={baseUrl}
               onChange={(e) => onBaseUrlChange(e.target.value)}
               className="mt-2 w-full rounded-lg border border-gray-300 px-2 py-3 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              placeholder="Base URL (include /v1)"
+              placeholder="基础地址（需包含 /v1）"
             />
           </div>
           {(!modelsChecked || (modelsChecked && models.length === 0)) && (
@@ -156,10 +156,10 @@ export default function OpenAICompatibleImageFields({
               {modelsLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Checking for models...
+                  正在检测模型...
                 </span>
               ) : (
-                "Check models"
+                "检测模型"
               )}
             </button>
           )}
@@ -168,7 +168,7 @@ export default function OpenAICompatibleImageFields({
         {modelsChecked && models.length > 0 ? (
           <div className="w-[222px]">
             <div>
-              <label className="mb-3 block text-sm font-medium text-gray-700">Select image model</label>
+              <label className="mb-3 block text-sm font-medium text-gray-700">选择图像模型</label>
               <div className="w-full">
                 <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
                   <PopoverTrigger asChild>
@@ -179,16 +179,16 @@ export default function OpenAICompatibleImageFields({
                       className="flex h-12 w-full justify-between rounded-lg border border-gray-300 px-4 py-4 outline-none transition-colors hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     >
                       <span className="truncate text-sm font-medium text-gray-900">
-                        {model || "Select a model"}
+                        {model || "选择模型"}
                       </span>
                       <ChevronUp className="h-4 w-4 text-gray-500" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="p-0" align="start" style={{ width: "var(--radix-popover-trigger-width)" }}>
                     <Command>
-                      <CommandInput placeholder="Search models..." />
+                      <CommandInput placeholder="搜索模型..." />
                       <CommandList>
-                        <CommandEmpty>No model found.</CommandEmpty>
+                        <CommandEmpty>未找到模型。</CommandEmpty>
                         <CommandGroup>
                           {models.map((m) => (
                             <CommandItem
@@ -225,18 +225,18 @@ export default function OpenAICompatibleImageFields({
     <div className="w-full space-y-6">
       <p className="-mt-2 mb-2 flex items-center gap-2 text-sm text-gray-500">
         <span className="block h-1 w-1 rounded-full bg-gray-400" />
-        Use an endpoint that supports OpenAI-style{" "}
-        <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">/v1/images/generations</code>. Include{" "}
-        <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">/v1</code> in the URL.
+        请使用支持 OpenAI 风格{" "}
+        <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">/v1/images/generations</code> 的接口。地址中需包含{" "}
+        <code className="rounded bg-gray-100 px-1 py-0.5 text-xs">/v1</code>。
       </p>
 
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">OpenAI Compatible URL</label>
+        <label className="mb-2 block text-sm font-medium text-gray-700">OpenAI 兼容地址</label>
         <div className="relative">
           <input
             type="text"
             required
-            placeholder="Enter your URL"
+            placeholder="请输入地址"
             className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             value={baseUrl}
             onChange={(e) => onBaseUrlChange(e.target.value)}
@@ -245,12 +245,12 @@ export default function OpenAICompatibleImageFields({
       </div>
 
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">OpenAI Compatible API Key</label>
+        <label className="mb-2 block text-sm font-medium text-gray-700">OpenAI 兼容 API 密钥</label>
         <div className="relative">
           <input
             type="text"
             required
-            placeholder="Enter your API Key"
+            placeholder="请输入 API 密钥"
             className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             value={apiKey}
             onChange={(e) => onApiKeyChange(e.target.value)}
@@ -273,10 +273,10 @@ export default function OpenAICompatibleImageFields({
             {modelsLoading ? (
               <div className="flex items-center justify-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Checking for models...
+                正在检测模型...
               </div>
             ) : (
-              "Check for available models"
+              "检测可用模型"
             )}
           </button>
         </div>
@@ -285,19 +285,19 @@ export default function OpenAICompatibleImageFields({
       {modelsChecked && models.length === 0 && (
         <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
           <p className="text-sm text-yellow-800">
-            No models found. Please make sure your API key is valid and has access to models.
+            未找到模型。请确认 API 密钥有效且具备访问模型的权限。
           </p>
         </div>
       )}
 
       {modelsChecked && models.length === 0 && (
         <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">Image model id</label>
+          <label className="mb-2 block text-sm font-medium text-gray-700">图像模型 ID</label>
           <div className="relative">
             <input
               type="text"
               required
-              placeholder="e.g. dall-e-3, gpt-image-1"
+              placeholder="例如 dall-e-3, gpt-image-1"
               className="w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               value={model}
               onChange={(e) => onModelChange(e.target.value)}
@@ -310,10 +310,10 @@ export default function OpenAICompatibleImageFields({
         <div className="mb-4">
           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="text-sm text-amber-800">
-              <strong>Important:</strong> Choose a model your server exposes for image generation.
+              <strong>重要：</strong>请选择服务器提供的、用于图像生成的模型。
             </p>
           </div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">Select image model</label>
+          <label className="mb-2 block text-sm font-medium text-gray-700">选择图像模型</label>
           <div className="w-full">
             <Popover open={openModelSelect} onOpenChange={setOpenModelSelect}>
               <PopoverTrigger asChild>
@@ -323,15 +323,15 @@ export default function OpenAICompatibleImageFields({
                   aria-expanded={openModelSelect}
                   className="flex h-12 w-full justify-between rounded-lg border border-gray-300 px-4 py-4 font-normal outline-none transition-colors hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
-                  <span className="text-sm font-medium text-gray-900">{model || "Select a model"}</span>
+                  <span className="text-sm font-medium text-gray-900">{model || "选择模型"}</span>
                   <ChevronUp className="h-4 w-4 text-gray-500" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0" align="start" style={{ width: "var(--radix-popover-trigger-width)" }}>
                 <Command>
-                  <CommandInput placeholder="Search model..." />
+                  <CommandInput placeholder="搜索模型..." />
                   <CommandList>
-                    <CommandEmpty>No model found.</CommandEmpty>
+                    <CommandEmpty>未找到模型。</CommandEmpty>
                     <CommandGroup>
                       {models.map((m, index) => (
                         <CommandItem

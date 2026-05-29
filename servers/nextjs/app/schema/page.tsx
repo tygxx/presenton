@@ -8,7 +8,7 @@ const page = () => {
   const searchParams = useSearchParams();
   const templateID = searchParams.get("group");
   if (!templateID) {
-    return <div>No templateID provided</div>;
+    return <div>未提供模板 ID</div>;
   }
   const [loading, setLoading] = useState(true);
   const [layout, setLayout] = useState<any[]>([]);
@@ -74,7 +74,7 @@ const page = () => {
   return (
     <div>
       {loading ? (
-        <div>Loading...</div>
+        <div>加载中...</div>
       ) : (
         <div>
           <div data-layouts={JSON.stringify(layout)}>

@@ -549,7 +549,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
         if (!isOpen) return;
 
         if (!compiledLayout?.schemaJSON) {
-            setParseError("Could not parse schema from slide code");
+            setParseError("无法从幻灯片代码中解析 Schema");
             setFields([]);
             return;
         }
@@ -683,14 +683,14 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
         return name
             .replace(/([A-Z])/g, ' $1')
             .replace(/^./, str => str.toUpperCase())
-            .replace(/\[\]$/, ' (items)')
+            .replace(/\[\]$/, ' (列表项)')
             .trim();
     };
 
     const getConstraintSummary = (field: SchemaField): string | null => {
         if (field.type === 'string') {
             if (field.minLength !== undefined || field.maxLength !== undefined) {
-                return `${field.minLength ?? '∞'}-${field.maxLength ?? '∞'} chars`;
+                return `${field.minLength ?? '∞'}-${field.maxLength ?? '∞'} 字`;
             }
         } else if (field.type === 'number') {
             if (field.minimum !== undefined || field.maximum !== undefined) {
@@ -698,7 +698,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
             }
         } else if (field.type === 'array') {
             if (field.minItems !== undefined || field.maxItems !== undefined) {
-                return `${field.minItems ?? '∞'}-${field.maxItems ?? '∞'} items`;
+                return `${field.minItems ?? '∞'}-${field.maxItems ?? '∞'} 项`;
             }
         }
         return null;
@@ -820,7 +820,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'Failed to generate content');
+                throw new Error(error.error || '生成内容失败');
             }
 
             const { content } = await response.json();
@@ -854,12 +854,12 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-gray-800 text-base font-semibold">
 
-                        Schema Editor
+                        Schema 编辑器
                     </div>
                     <div className="flex items-center gap-2">
                         {hasChanges && (
                             <span className="px-2 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-600 rounded border border-amber-200">
-                                Unsaved
+                                未保存
                             </span>
                         )}
                         <Button
@@ -869,7 +869,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
                             className="h-7 px-3 text-[11px] bg-emerald-500 hover:bg-emerald-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <Save className="w-3 h-3 mr-1" />
-                            Save
+                            保存
                         </Button>
                         <button
                             onClick={handleCancel}
@@ -891,7 +891,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
                         <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2">
                                 <span className="text-lg font-medium text-[#111827]">
-                                    Character Limits
+                                    字数限制
                                 </span>
                                 <span className="text-sm px-1.5 py-0.5 bg-gray-50 text-gray-700 rounded">
                                     {fields.length}
@@ -908,12 +908,12 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
                                     }}
                                     className="text-[10px] font-medium text-gray-400 hover:text-violet-600 transition-colors"
                                 >
-                                    {areAllCollapsed ? 'Expand all' : 'Collapse all'}
+                                    {areAllCollapsed ? '展开全部' : '收起全部'}
                                 </button>
                             )}
                         </div>
                         <p className="text-sm text-gray-600 py-1">
-                            Set min/max character limits for each field. This controls how much text AI generates for your slide.
+            为每个字段设置最小/最大字数限制，用于控制 AI 为幻灯片生成的文本长度。
                         </p>
                     </div>
 
@@ -980,7 +980,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
                                                     {isHighlighted && (
                                                         <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded">
                                                             <MousePointer2 className="w-2.5 h-2.5" />
-                                                            clicked
+                                                            已选中
                                                         </span>
                                                     )}
                                                 </div>
@@ -999,7 +999,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
                                                     {(f.originalType === 'string' || f.originalType === 'number') && (
                                                         <div className="mb-2">
                                                             <div className="flex items-center gap-2">
-                                                                <Label className="text-xs text-gray-600">Type:</Label>
+                                                                <Label className="text-xs text-gray-600">类型：</Label>
                                                                 <Select
                                                                     value={f.type}
                                                                     onValueChange={(value) => handleTypeChange(f.path, value as 'string' | 'number')}
@@ -1013,7 +1013,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
                                                                     </SelectContent>
                                                                 </Select>
                                                                 {isTypeChanged(f) && (
-                                                                    <span className="text-[9px] px-1 py-0.5 bg-blue-50 text-blue-500 rounded">changed</span>
+                                                                    <span className="text-[9px] px-1 py-0.5 bg-blue-50 text-blue-500 rounded">已修改</span>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -1120,7 +1120,7 @@ export const SchemaEditor: React.FC<SchemaEditorProps> = ({
                                 const textColor = isArrayParent ? 'text-purple-500' : 'text-blue-500';
                                 const bgColor = isArrayParent ? 'bg-purple-50' : 'bg-blue-50';
                                 const badgeTextColor = isArrayParent ? 'text-purple-400' : 'text-blue-400';
-                                const headerLabel = isArrayParent ? 'Item Fields' : `${formatFieldName(field.name)} Properties`;
+                                const headerLabel = isArrayParent ? '列表项字段' : `${formatFieldName(field.name)} 属性`;
 
                                 return (
                                     <div key={field.path} className="space-y-1">

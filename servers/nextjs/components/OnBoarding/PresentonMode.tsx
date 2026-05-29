@@ -1052,7 +1052,7 @@ const PresentonMode = ({ currentStep, setStep }: { currentStep: number, setStep:
                     <div className='w-[74px] h-[74px] px-[13.5px] py-[14.2px] rounded-[4px] flex items-center justify-center'
                         style={{ backgroundColor: '#F4F3FF' }}
                     >
-                        <img src="/image-markup.svg" className='w-full h-full object-cover' alt='image-markup' />
+                        <img src="/image-markup.svg" className='w-full h-full object-cover' alt='图像生成' />
                     </div>
                     <div>
 
