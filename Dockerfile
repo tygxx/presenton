@@ -136,5 +136,9 @@ COPY start.js LICENSE NOTICE ./
 COPY scripts/presenton-terminal-banner.mjs /app/scripts/presenton-terminal-banner.mjs
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# 桥接 web/Google Noto 族名 → 已安装的 Noto CJK 族名，修复服务端(LibreOffice/chromium)中文豆腐块
+COPY docker/fonts/99-noto-cjk-alias.conf /etc/fonts/conf.d/99-noto-cjk-alias.conf
+RUN fc-cache -f >/dev/null 2>&1 || true
+
 EXPOSE 80
 CMD ["node", "/app/start.js"]
