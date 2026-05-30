@@ -105,7 +105,9 @@ async def _call_template_provider_with_llmai(
             ),
         ],
         response_format=TextResponse(),
-        max_tokens=8192,
+        # Dense slides (multi-column grids, many cards) can produce >8k tokens of
+        # TSX; 8192 truncated them mid-string and broke compilation. Give headroom.
+        max_tokens=16384,
     )
     output_text = extract_text(response.content) or ""
     if not output_text:
