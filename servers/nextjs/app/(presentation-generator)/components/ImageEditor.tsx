@@ -225,7 +225,7 @@ const ImageEditor = ({
    */
   const handleStockImageSearch = async () => {
     if (!prompt.trim()) {
-      setError("Please enter search keywords");
+      setError("请输入搜索关键词");
       return;
     }
     if (!stockImageProvider) return;
@@ -237,7 +237,7 @@ const ImageEditor = ({
 
     if (!apiKey) {
       setError(
-        `Add your ${stockImageProvider === "pexels" ? "Pexels" : "Pixabay"} API key in Settings to search stock images.`
+        `请先在设置中填写 ${stockImageProvider === "pexels" ? "Pexels" : "Pixabay"} 的 API Key，再搜索图库图片。`
       );
       return;
     }
@@ -251,12 +251,12 @@ const ImageEditor = ({
       });
       setStockSearchResults(urls);
       if (urls.length === 0) {
-        setError("No images found. Try different keywords.");
+        setError("未找到图片，请尝试其他关键词。");
       }
     } catch (err: unknown) {
       console.error("Stock image search error", err);
       const message =
-        err instanceof Error ? err.message : "Stock search failed. Please try again.";
+        err instanceof Error ? err.message : "图库搜索失败，请重试。";
       setError(message);
       setStockSearchResults([]);
     } finally {
@@ -269,7 +269,7 @@ const ImageEditor = ({
    */
   const handleGenerateImage = async () => {
     if (!prompt) {
-      setError("Please enter a prompt");
+      setError("请输入图片描述");
       return;
     }
     if (stockImageProvider) {
@@ -287,7 +287,7 @@ const ImageEditor = ({
       setPreviewImages(resolveEditorImageSource(response));
     } catch (err: any) {
       console.error("Error in image generation", err);
-      setError(err.message || "Failed to generate image. Please try again.");
+      setError(err.message || "图片生成失败，请重试。");
     } finally {
       setIsGenerating(false);
     }
@@ -304,13 +304,13 @@ const ImageEditor = ({
 
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError("File size should be less than 5MB");
+      setUploadError("文件大小不能超过 5MB");
       return;
     }
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setUploadError("Please upload an image file");
+      setUploadError("请上传图片文件");
       return;
     }
     try {

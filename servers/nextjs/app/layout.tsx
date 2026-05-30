@@ -30,9 +30,9 @@ const unbounded = Unbounded({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://presenton.ai"),
-  title: "Presenton - Open Source AI presentation generator",
+  title: "Presenton - 开源 AI 演示文稿生成器",
   description:
-    "Open-source AI presentation generator with custom layouts, multi-model support (OpenAI, Gemini, Ollama), and PDF/PPTX export. A free Gamma alternative.",
+    "开源 AI 演示文稿生成器，支持自定义版式、多模型（OpenAI、Gemini、Ollama）以及 PDF/PPTX 导出，是免费的 Gamma 替代方案。",
   keywords: [
     "AI presentation generator",
     "data storytelling",
@@ -44,9 +44,9 @@ export const metadata: Metadata = {
     "professional slides",
   ],
   openGraph: {
-    title: "Presenton - Open Source AI presentation generator",
+    title: "Presenton - 开源 AI 演示文稿生成器",
     description:
-      "Open-source AI presentation generator with custom layouts, multi-model support (OpenAI, Gemini, Ollama), and PDF/PPTX export. A free Gamma alternative.",
+      "开源 AI 演示文稿生成器，支持自定义版式、多模型（OpenAI、Gemini、Ollama）以及 PDF/PPTX 导出，是免费的 Gamma 替代方案。",
     url: "https://presenton.ai",
     siteName: "Presenton",
     images: [
@@ -54,20 +54,20 @@ export const metadata: Metadata = {
         url: "https://presenton.ai/presenton-feature-graphics.png",
         width: 1200,
         height: 630,
-        alt: "Presenton Logo",
+        alt: "Presenton 标志",
       },
     ],
     type: "website",
-    locale: "en_US",
+    locale: "zh_CN",
   },
   alternates: {
     canonical: "https://presenton.ai",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Presenton - Open Source AI presentation generator",
+    title: "Presenton - 开源 AI 演示文稿生成器",
     description:
-      "Open-source AI presentation generator with custom layouts, multi-model support (OpenAI, Gemini, Ollama), and PDF/PPTX export. A free Gamma alternative.",
+      "开源 AI 演示文稿生成器，支持自定义版式、多模型（OpenAI、Gemini、Ollama）以及 PDF/PPTX 导出，是免费的 Gamma 替代方案。",
     images: ["https://presenton.ai/presenton-feature-graphics.png"],
   },
 };

@@ -94,7 +94,7 @@ export const useOutlineStreaming = (presentationId: string | null) => {
         } catch {
           if (!scheduleRetry("invalid SSE payload")) {
             resetStreamingState();
-            notify.error("Stream parse failed", "Failed to parse outline stream response.");
+            notify.error("流解析失败", "无法解析大纲流式响应。");
           }
           return;
         }
@@ -161,7 +161,7 @@ export const useOutlineStreaming = (presentationId: string | null) => {
             } catch (error) {
               if (!scheduleRetry("failed to parse complete payload")) {
                 resetStreamingState();
-                notify.error("Parse failed", "Failed to parse presentation data.");
+                notify.error("解析失败", "无法解析演示文稿数据。");
               }
             }
             accumulatedChunks = "";
@@ -184,9 +184,9 @@ export const useOutlineStreaming = (presentationId: string | null) => {
               resetStreamingState();
               closeEventSource();
               notify.error(
-                "Outline streaming failed",
+                "大纲流式生成失败",
                 data.detail ||
-                  "Failed to connect to the server. Please try again."
+                  "无法连接到服务器，请重试。"
               );
             }
             break;
@@ -197,7 +197,7 @@ export const useOutlineStreaming = (presentationId: string | null) => {
         if (!scheduleRetry("connection lost")) {
           resetStreamingState();
           closeEventSource();
-          notify.error("Connection failed", "Failed to connect to the server. Please try again.");
+          notify.error("连接失败", "无法连接到服务器，请重试。");
         }
       };
     };

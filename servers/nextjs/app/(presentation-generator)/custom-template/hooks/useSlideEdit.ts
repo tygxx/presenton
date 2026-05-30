@@ -17,7 +17,7 @@ export const useSlideEdit = (
   const handleSave = async (): Promise<boolean> => {
 
     if (!prompt.trim()) {
-      alert("Please enter a prompt before saving.");
+      alert("请先输入提示词再保存。");
       return false;
     }
 
@@ -65,8 +65,8 @@ export const useSlideEdit = (
     } catch (error) {
       console.error("Error updating slide:", error);
       notify.error(
-        "Could not update slide",
-        error instanceof Error ? error.message : "Unknown error"
+        "无法更新幻灯片",
+        error instanceof Error ? error.message : "未知错误"
       );
       return false;
     } finally {

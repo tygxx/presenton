@@ -244,7 +244,7 @@ export const pullOllamaModel = async (
             settled = true;
             cleanup();
             onProgress?.(resetDownloadingModel());
-            reject(new Error(data.error || "Error occurred while pulling model"));
+            reject(new Error(data.error || "拉取模型时出错"));
           } else {
             onProgress?.(data);
           }
@@ -254,11 +254,11 @@ export const pullOllamaModel = async (
           cleanup();
           onProgress?.(resetDownloadingModel());
           if (response.status === 403) {
-            reject(new Error("Request to Ollama Not Authorized"));
+            reject(new Error("访问 Ollama 未获授权"));
           } else {
             const errorMessage = await getPullErrorMessage(
               response,
-              "Error occurred while pulling model"
+              "拉取模型时出错"
             );
             reject(new Error(errorMessage));
           }

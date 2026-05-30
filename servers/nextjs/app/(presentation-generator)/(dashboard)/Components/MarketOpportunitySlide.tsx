@@ -1,9 +1,9 @@
 import * as z from "zod";
 
 export const slideLayoutId = "product-overview-market-opportunity-slide";
-export const slideLayoutName = "Product Overview Market Opportunity Slide";
+export const slideLayoutName = "产品概览-市场机会幻灯片";
 export const slideLayoutDescription =
-  "A market opportunity slide with title and intro text on the left, four bullet lines extending toward the right, and concentric value circles as the visual focal point.";
+  "市场机会幻灯片，左侧为标题和引导文字，四条要点向右延伸，以同心圆数值作为视觉焦点。";
 
 const BulletSchema = z.object({
   text: z.string().min(12).max(46).meta({

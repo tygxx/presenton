@@ -149,7 +149,7 @@ export const usePresentationStreaming = (
       setLoading(false);
       dispatch(setStreaming(false));
       setError(true);
-      notify.error("Presentation streaming failed", description);
+      notify.error("演示文稿流式生成失败", description);
     };
 
     const scheduleRetry = (reason: string): boolean => {
@@ -189,7 +189,7 @@ export const usePresentationStreaming = (
           data = JSON.parse(event.data);
         } catch {
           if (!scheduleRetry("invalid SSE payload")) {
-            finalizeFailure("Failed to parse stream response.");
+            finalizeFailure("解析流式响应失败。");
           }
           return;
         }
@@ -262,7 +262,7 @@ export const usePresentationStreaming = (
               window.history.replaceState({}, "", newUrl.toString());
             } catch (error) {
               if (!scheduleRetry("failed to parse complete payload")) {
-                finalizeFailure("Failed to parse final presentation payload.");
+                finalizeFailure("解析最终演示文稿数据失败。");
               }
             }
             accumulatedChunks = "";
@@ -290,7 +290,7 @@ export const usePresentationStreaming = (
             ) {
               finalizeFailure(
                 data.detail ||
-                  "Failed to connect to the server. Please try again."
+                  "无法连接到服务器，请重试。"
               );
             }
             break;
@@ -300,7 +300,7 @@ export const usePresentationStreaming = (
       eventSource.onerror = (error) => {
         console.error("EventSource failed:", error);
         if (!scheduleRetry("connection lost")) {
-          finalizeFailure("Failed to connect to the server. Please try again.");
+          finalizeFailure("无法连接到服务器，请重试。");
         }
       };
     };

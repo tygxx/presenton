@@ -99,7 +99,7 @@ export class PresentationChatApi {
     });
     return await ApiResponseHandler.handleResponse(
       response,
-      "Failed to list chat conversations"
+      "获取对话列表失败"
     );
   }
 
@@ -116,7 +116,7 @@ export class PresentationChatApi {
     });
     return await ApiResponseHandler.handleResponse(
       response,
-      "Failed to load chat history"
+      "加载聊天记录失败"
     );
   }
 
@@ -132,7 +132,7 @@ export class PresentationChatApi {
 
     return await ApiResponseHandler.handleResponse(
       response,
-      "Failed to send chat message"
+      "发送消息失败"
     );
   }
 
@@ -152,13 +152,13 @@ export class PresentationChatApi {
     if (!response.ok) {
       await ApiResponseHandler.handleResponse(
         response,
-        "Failed to stream chat message"
+        "消息流式响应失败"
       );
-      throw new Error("Failed to stream chat message");
+      throw new Error("消息流式响应失败");
     }
 
     if (!response.body) {
-      throw new Error("No response body received from chat stream");
+      throw new Error("未收到聊天流的响应内容");
     }
 
     const reader = response.body.getReader();
@@ -238,7 +238,7 @@ export class PresentationChatApi {
         const message =
           typeof detail === "string" && detail.trim().length > 0
             ? detail
-            : "Chat stream failed";
+            : "聊天流式响应失败";
         throw new Error(message);
       }
 
@@ -329,6 +329,6 @@ export class PresentationChatApi {
       return finalResponse;
     }
 
-    throw new Error("Chat stream ended before completion");
+    throw new Error("聊天流在完成前已结束");
   }
 }

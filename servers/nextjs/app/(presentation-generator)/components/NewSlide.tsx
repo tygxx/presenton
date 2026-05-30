@@ -57,8 +57,8 @@ const LayoutItem = memo(({ layout, onSelect }: LayoutItemProps) => {
     <div
       role="button"
       tabIndex={0}
-      aria-label={`Add ${layoutName || "slide"} layout`}
-      title={layoutName || "Slide layout"}
+      aria-label={`添加${layoutName || "幻灯片"}版式`}
+      title={layoutName || "幻灯片版式"}
       onClick={selectLayout}
       onKeyDown={(event) => {
         if (event.key !== "Enter" && event.key !== " ") return;

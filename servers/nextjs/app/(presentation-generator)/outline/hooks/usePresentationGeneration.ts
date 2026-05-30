@@ -32,16 +32,16 @@ export const usePresentationGeneration = (
   const validateInputs = useCallback(() => {
     if (!outlines || outlines.length === 0) {
       notify.warning(
-        "Outlines not ready",
-        "Please wait for your outlines to finish generating before continuing."
+        "大纲尚未就绪",
+        "请等待大纲生成完成后再继续。"
       );
       return false;
     }
 
     if (!selectedTemplate) {
       notify.warning(
-        "Layout not selected",
-        "Choose a layout group before generating your presentation."
+        "未选择版式",
+        "请先选择一个版式分组，再生成演示文稿。"
       );
       return false;
     }
@@ -103,7 +103,7 @@ export const usePresentationGeneration = (
     });
 
     setLoadingState({
-      message: "Generating presentation data...",
+      message: "正在生成演示文稿数据……",
       isLoading: true,
       showProgress: true,
       duration: 30,
@@ -115,7 +115,7 @@ export const usePresentationGeneration = (
       // Check if it's a custom template (string = presentationId)
       if (typeof selectedTemplate === "string") {
         setLoadingState({
-          message: "Loading custom template...",
+          message: "正在加载自定义模板……",
           isLoading: true,
           showProgress: true,
           duration: 30,
@@ -130,12 +130,12 @@ export const usePresentationGeneration = (
           !customTemplateDetail ||
           customTemplateDetail.layouts.length === 0
         ) {
-          notify.error("Template error", "Failed to load custom template layouts.");
+          notify.error("模板错误", "加载自定义模板版式失败。");
           return;
         }
 
         setLoadingState({
-          message: "Generating presentation data...",
+          message: "正在生成演示文稿数据……",
           isLoading: true,
           showProgress: true,
           duration: 30,
@@ -189,8 +189,8 @@ export const usePresentationGeneration = (
     } catch (error: any) {
       console.error("Error In Presentation Generation(prepare).", error);
       notify.error(
-        "Generation error",
-        error.message || "Error in presentation generation."
+        "生成出错",
+        error.message || "生成演示文稿时出错。"
       );
     } finally {
       setLoadingState(DEFAULT_LOADING_STATE);

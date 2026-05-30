@@ -32,7 +32,7 @@ export const useLayoutSaving = (
 
   const saveLayout = useCallback(async (layoutName: string, description: string, template_info_id: string): Promise<string | null> => {
     if (!slides.length) {
-      notify.error("No slides to save", "Add at least one slide before saving the layout.");
+      notify.error("没有可保存的幻灯片", "请先添加至少一张幻灯片，再保存模板。");
       return null;
     }
 
@@ -75,12 +75,12 @@ export const useLayoutSaving = (
 
       const data = await ApiResponseHandler.handleResponse(
         saveResponse,
-        "Failed to save layout components"
+        "保存模板组件失败"
       );
       if (!data) {
         notify.error(
-          "Could not save layout",
-          "Some layout components could not be saved. Please try again."
+          "无法保存模板",
+          "部分模板组件未能保存，请重试。"
         );
         return null;
       }
@@ -91,8 +91,8 @@ export const useLayoutSaving = (
       });
 
       notify.success(
-        "Layout saved",
-        `Layout "${layoutName}" was saved successfully.`
+        "模板已保存",
+        `模板“${layoutName}”已成功保存。`
       );
       trackEvent(MixpanelEvent.CustomTemplate_Saved, {
         template_info_id,
@@ -106,10 +106,10 @@ export const useLayoutSaving = (
     } catch (error) {
       console.error("Error saving layout:", error);
       notify.error(
-        "Failed to save layout",
+        "保存模板失败",
         error instanceof Error
           ? error.message
-          : "An unexpected error occurred"
+          : "发生未知错误"
       );
       return null;
     } finally {

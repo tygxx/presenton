@@ -71,7 +71,7 @@ export const useTemplateCreation = () => {
 
             const data = await ApiResponseHandler.handleResponse(
                 response,
-                "Failed to check fonts in the presentation"
+                "检查演示文稿中的字体失败"
             );
 
             updateState({
@@ -82,9 +82,9 @@ export const useTemplateCreation = () => {
 
             return data;
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Font check failed";
+            const errorMessage = error instanceof Error ? error.message : "字体检查失败";
             updateState({ error: errorMessage, isLoading: false });
-            notify.error("Font check failed", errorMessage);
+            notify.error("字体检查失败", errorMessage);
             return null;
         }
     }, [updateState]);
@@ -94,7 +94,7 @@ export const useTemplateCreation = () => {
         // Check if font is already added
         const existingFont = uploadedFonts.find((f) => f.fontName === fontName);
         if (existingFont) {
-            notify.warning("Font already added", `Font "${fontName}" is already in your upload list.`);
+            notify.warning("字体已添加", `字体 "${fontName}" 已在你的上传列表中。`);
             return fontName;
         }
 
@@ -103,14 +103,14 @@ export const useTemplateCreation = () => {
         const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
 
         if (!validExtensions.includes(fileExtension)) {
-            notify.error("Invalid font file", "Please upload .ttf, .otf, .woff, .woff2, or .eot files.");
+            notify.error("字体文件无效", "请上传 .ttf、.otf、.woff、.woff2 或 .eot 文件。");
             return null;
         }
 
         // Validate file size (10MB limit)
         const maxSize = 10 * 1024 * 1024;
         if (file.size > maxSize) {
-            notify.error("File too large", "Font file size must be less than 10MB.");
+            notify.error("文件过大", "字体文件大小必须小于 10MB。");
             return null;
         }
 
@@ -123,14 +123,14 @@ export const useTemplateCreation = () => {
         };
 
         setUploadedFonts(prev => [...prev, newFont]);
-        notify.success("Font added", `Font "${fontName}" was added successfully.`);
+        notify.success("字体已添加", `字体 "${fontName}" 添加成功。`);
         return fontName;
     }, [uploadedFonts]);
 
     // Remove a font
     const removeFont = useCallback((fontName: string) => {
         setUploadedFonts(prev => prev.filter(font => font.fontName !== fontName));
-        notify.info("Font removed", "The font was removed from your upload list.");
+        notify.info("字体已移除", "该字体已从你的上传列表中移除。");
     }, []);
 
     // Get all unsupported fonts that need upload
@@ -185,7 +185,7 @@ export const useTemplateCreation = () => {
 
             const data = await ApiResponseHandler.handleResponse(
                 response,
-                "Failed to upload fonts and preview slides"
+                "上传字体并预览幻灯片失败"
             );
 
             updateState({
@@ -194,12 +194,12 @@ export const useTemplateCreation = () => {
                 isLoading: false
             });
 
-            notify.success("Preview generated", "Slides preview was generated successfully.");
+            notify.success("预览已生成", "幻灯片预览生成成功。");
             return data;
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Preview generation failed";
+            const errorMessage = error instanceof Error ? error.message : "预览生成失败";
             updateState({ error: errorMessage, isLoading: false });
-            notify.error("Preview failed", errorMessage);
+            notify.error("预览失败", errorMessage);
             return null;
         }
     }, [uploadedFonts, updateState]);
@@ -207,7 +207,7 @@ export const useTemplateCreation = () => {
     // Step 3: Initialize template creation
     const initTemplateCreation = useCallback(async (): Promise<string | null> => {
         if (!state.previewData) {
-            notify.error("No preview data", "Generate a preview before continuing.");
+            notify.error("无预览数据", "请先生成预览再继续。");
             return null;
         }
 
@@ -226,7 +226,7 @@ export const useTemplateCreation = () => {
 
             const data = await ApiResponseHandler.handleResponse(
                 response,
-                "Failed to initialize template creation"
+                "初始化模板创建失败"
             );
 
             // Initialize slides array based on preview images
@@ -252,7 +252,7 @@ export const useTemplateCreation = () => {
                 uploaded_font_count: state.previewData.fonts?.length || 0,
             });
 
-            notify.success("Template initialized", "Template creation was initialized successfully.");
+            notify.success("模板已初始化", "模板创建初始化成功。");
 
             // Automatically start processing the first slide
             if (typeof data === 'string') {
@@ -263,9 +263,9 @@ export const useTemplateCreation = () => {
 
             return typeof data === 'string' ? data : data.id;
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Initialization failed";
+            const errorMessage = error instanceof Error ? error.message : "初始化失败";
             updateState({ error: errorMessage, isLoading: false });
-            notify.error("Initialization failed", errorMessage);
+            notify.error("初始化失败", errorMessage);
             // reset the state
             reset();
             return null;
@@ -302,7 +302,7 @@ export const useTemplateCreation = () => {
 
             const startData = await ApiResponseHandler.handleResponse(
                 startResponse,
-                `Failed to start layout job for slide ${slideIndex + 1}`
+                `启动第 ${slideIndex + 1} 张幻灯片的版式任务失败`
             );
             const jobId = startData.job_id as string;
 
@@ -318,7 +318,7 @@ export const useTemplateCreation = () => {
                 );
                 const statusData = await ApiResponseHandler.handleResponse(
                     statusResponse,
-                    `Failed to check layout job for slide ${slideIndex + 1}`
+                    `检查第 ${slideIndex + 1} 张幻灯片的版式任务失败`
                 );
                 if (statusData.status === "complete" && statusData.react_component) {
                     data = { react_component: statusData.react_component };
@@ -327,7 +327,7 @@ export const useTemplateCreation = () => {
                 if (statusData.status === "failed") {
                     throw new Error(
                         statusData.error ||
-                            `Layout generation failed for slide ${slideIndex + 1}`
+                            `第 ${slideIndex + 1} 张幻灯片的版式生成失败`
                     );
                 }
                 await new Promise((r) => setTimeout(r, pollMs));
@@ -335,7 +335,7 @@ export const useTemplateCreation = () => {
 
             if (!data) {
                 throw new Error(
-                    "Timed out waiting for slide layout generation (exceeded 45 minutes)"
+                    "等待幻灯片版式生成超时（超过 45 分钟）"
                 );
             }
 
@@ -381,20 +381,20 @@ export const useTemplateCreation = () => {
                             const processedCount = newSlides.filter(s => s.processed).length;
                             if (failedCount > 0) {
                                 notify.warning(
-                                    "Some slides could not be processed",
-                                    `${processedCount} of ${newSlides.length} slides were reconstructed. ${failedCount} slide(s) failed — review them and try again.`
+                                    "部分幻灯片无法处理",
+                                    `${newSlides.length} 张幻灯片中已重建 ${processedCount} 张。${failedCount} 张失败 —— 请检查后重试。`
                                 );
                             } else {
                                 notify.success(
-                                    "All slides processed",
-                                    "Every slide was reconstructed successfully."
+                                    "所有幻灯片已处理",
+                                    "每张幻灯片都已成功重建。"
                                 );
                             }
                         }
                     }
                 } else {
                     // Single slide reconstruction - just show success
-                    notify.success("Slide reconstructed", `Slide ${slideIndex + 1} was reconstructed successfully.`);
+                    notify.success("幻灯片已重建", `第 ${slideIndex + 1} 张幻灯片重建成功。`);
                 }
 
                 return newSlides;
@@ -403,7 +403,7 @@ export const useTemplateCreation = () => {
             return layoutResult;
         } catch (error) {
             const errorMessage =
-                error instanceof Error ? error.message : "Layout creation failed";
+                error instanceof Error ? error.message : "版式创建失败";
             const isVisionModelError = errorMessage.includes(TEMPLATE_VISION_MODEL_MARKER);
 
             // Auto-retry once on transient failures; vision/model capability errors won't recover.
@@ -442,13 +442,13 @@ export const useTemplateCreation = () => {
                     .trim()
                     .replace(/^\n+/, "");
                 notify.error(
-                    "Vision-capable text model required",
+                    "需要支持视觉的文本模型",
                     description ||
-                        "Choose a text model that accepts images in Settings, save, and try again.",
+                        "请在设置中选择一个可接受图片输入的文本模型，保存后重试。",
                     { duration: 12_000 }
                 );
             } else {
-                notify.error(`Slide ${slideIndex + 1} failed`, errorMessage);
+                notify.error(`第 ${slideIndex + 1} 张幻灯片失败`, errorMessage);
             }
             return null;
         }
