@@ -124,6 +124,224 @@ _STYLE_TOKENS = {
 _STYLE_MODIFIERS = {"semi", "demi", "extra", "ultra"}
 
 
+# ---------------------------------------------------------------------------
+# Auto-substitution for fonts Google Fonts does not host.
+#
+# Chinese system/foundry fonts (微软雅黑, 宋体, 黑体, MiSans ...) and a few
+# proprietary Latin office fonts (Arial, Calibri ...) are not on Google Fonts,
+# so the availability check reports them as "missing" and the user is asked to
+# upload font files they usually cannot legally obtain. Instead we map each to a
+# visually-similar family that IS hosted on Google Fonts (the free Noto CJK
+# families, and the metric-compatible Liberation/Croscore Latin twins). Matching
+# is done on a folded key (lowercased, separators removed) with a fallback that
+# strips trailing weight/style tokens, so weight-suffixed names still resolve.
+# ---------------------------------------------------------------------------
+_FONT_SUBSTITUTE_GROUPS: List[Tuple[str, Tuple[str, ...]]] = [
+    # --- Simplified-Chinese sans (黑体类) -> Noto Sans SC ---
+    ("Noto Sans SC", (
+        "微软雅黑", "微软雅黑 Light", "微软雅黑 Bold", "Microsoft YaHei",
+        "Microsoft YaHei UI", "Microsoft YaHei Light", "MS YaHei",
+        "msyh", "msyhl", "msyhbd",
+    )),
+    ("Noto Sans SC", ("黑体", "SimHei", "simhei")),
+    ("Noto Sans SC", (
+        "华文黑体", "STHeiti", "STHeiti Light", "STHeiti Medium",
+        "Heiti SC", "Heiti SC Light", "Heiti SC Medium",
+    )),
+    ("Noto Sans SC", (
+        "等线", "等线 Light", "DengXian", "DengXian Light", "DengXian Bold", "Dengxian",
+    )),
+    ("Noto Sans SC", (
+        "苹方", "苹方-简", "苹方 简", "PingFang SC", "PingFangSC",
+        "PingFang SC Regular", "PingFang SC Medium", "PingFang SC Light",
+        "PingFang SC Semibold",
+    )),
+    ("Noto Sans SC", (
+        "冬青黑体", "冬青黑体简体中文", "Hiragino Sans GB", "Hiragino Sans GB W3",
+        "Hiragino Sans GB W6", "HiraginoSansGB",
+    )),
+    ("Noto Sans SC", ("幼圆", "YouYuan", "youyuan")),
+    ("Noto Sans SC", (
+        "文泉驿微米黑", "文泉驿微米黑体", "WenQuanYi Micro Hei",
+        "WenQuanYi Micro Hei Mono", "wqy-microhei",
+    )),
+    ("Noto Sans SC", (
+        "思源黑体", "思源黑体 CN", "思源黑体 CN Regular", "思源黑体 CN Medium",
+        "思源黑体 CN Bold", "思源黑体 CN Light", "Source Han Sans",
+        "Source Han Sans SC", "Source Han Sans CN", "Source Han Sans SC Regular",
+        "Source Han Sans SC Medium", "Source Han Sans SC Bold",
+        "Source Han Sans SC Light", "Source Han Sans CN Normal",
+        "Noto Sans CJK SC", "Noto Sans CJK SC Regular", "Noto Sans CJK SC Bold",
+        "SourceHanSansSC", "SourceHanSansCN",
+    )),
+    ("Noto Sans SC", (
+        "方正黑体", "方正黑体简体", "方正黑体_GBK", "FZHei", "FZHei-B01",
+        "FZHei-B01S", "FZHeiTi", "FZHTJW",
+    )),
+    ("Noto Sans SC", (
+        "方正兰亭黑", "方正兰亭黑简体", "方正兰亭中黑", "方正兰亭粗黑",
+        "方正兰亭黑_GBK", "Lantinghei", "Lantinghei SC", "FZLanTingHei",
+        "FZLTHJW", "FZLTXHJW", "FZLTZHJW",
+    )),
+    ("Noto Sans SC", ("微软简黑体", "微软简中黑", "MS Hei", "MSHei")),
+    ("Noto Sans SC", ("黑体-简",)),
+    ("Noto Sans SC", ("兰亭黑", "兰亭黑-简", "LanTingHei", "LanTingHeiSC")),
+    ("Noto Sans SC", ("方正综艺", "方正综艺简体", "FZZongYi", "FZZY", "FZZongYi-M09S")),
+    ("Noto Sans SC", (
+        "汉仪黑体", "汉仪中黑", "汉仪粗黑", "HYHei", "HYZhongHei", "HiraganaHYHei",
+    )),
+    ("Noto Sans SC", (
+        "造字工房力黑", "造字工房力黑体", "MFLiHei", "MFLiHei_Noncommercial",
+    )),
+    # --- Brand / vendor Simplified-Chinese sans -> Noto Sans SC ---
+    ("Noto Sans SC", (
+        "MiSans", "MiSans VF", "MiSans Latin", "小米MiSans", "MiSans Regular",
+        "MiSans Demibold",
+    )),
+    ("Noto Sans SC", (
+        "OPPO Sans", "OPPOSans", "OPPOSans R", "OPPOSans M", "OPPOSans H",
+        "OPPOSans B", "OPPOSans L", "OPPO Sans R", "OPPO Sans M", "OPPO Sans H",
+        "OPPOSans 3.0", "OPPOSans 4.0",
+    )),
+    ("Noto Sans SC", (
+        "HarmonyOS Sans", "HarmonyOS Sans SC", "鸿蒙", "鸿蒙字体",
+        "HarmonyOS_Sans", "HarmonyOS Sans Condensed", "HarmonyOS Sans Naskh",
+    )),
+    ("Noto Sans SC", (
+        "阿里巴巴普惠体", "Alibaba PuHuiTi", "AlibabaPuHuiTi",
+        "Alibaba PuHuiTi 2.0", "Alibaba PuHuiTi 3.0", "阿里巴巴普惠体 2.0",
+        "阿里巴巴普惠体 3.0", "AlibabaPuHuiTi-2", "AlibabaPuHuiTi-3", "Alibaba-PuHuiTi",
+    )),
+    ("Noto Sans SC", (
+        "小米兰亭", "小米兰亭Pro", "MI Lan Pro", "MI Lan", "MiLanPro",
+        "Mi Lan Pro", "小米兰亭 Pro",
+    )),
+    ("Noto Sans SC", (
+        "vivo Sans", "vivoSans", "vivo Sans T", "vivoType", "vivo 字体", "OriginSans",
+    )),
+    ("Noto Sans SC", (
+        "钉钉进步体", "DingTalk JinBuTi", "DingTalkJinBuTi", "DingTalk_JinBuTi",
+        "进步体", "钉钉 进步体",
+    )),
+    ("Noto Sans SC", (
+        "得意黑", "Smiley Sans", "SmileySans", "得意黑 Oblique",
+        "Smiley Sans Oblique", "SmileySans-Oblique",
+    )),
+    ("Noto Sans SC", (
+        "抖音美好体", "抖音美好体 VF", "Douyin Sans", "DouyinSans",
+        "抖音字体", "TikTok Sans",
+    )),
+    ("Noto Sans SC", (
+        "京东JD体", "京东体", "JDLangZhengTi", "京东朗正体", "JD Zheng Hei",
+        "京东正黑", "JDZhengHT", "JD LangZheng",
+    )),
+    ("Noto Sans SC", (
+        "腾讯体", "TencentSans", "Tencent Sans", "QQ字体", "TTTGB", "腾讯字体",
+    )),
+    ("Noto Sans SC", (
+        "联想小新体", "Lenovo XiaoXin", "LenovoXiaoXin", "小新潮酷体", "Lenovo Sans",
+    )),
+    # --- Simplified-Chinese serif / kai / fangsong -> Noto Serif SC ---
+    # (Kai/FangSong have no exact free match; Noto Serif SC is the closest fallback.)
+    ("Noto Serif SC", (
+        "宋体", "SimSun", "中易宋体", "宋体-PUA", "simsun", "SimSun-ExtB",
+    )),
+    ("Noto Serif SC", ("新宋体", "NSimSun", "nsimsun")),
+    ("Noto Serif SC", (
+        "华文宋体", "STSong", "STSong-Light", "华文中宋", "STZhongsong",
+    )),
+    ("Noto Serif SC", (
+        "思源宋体", "Source Han Serif", "Source Han Serif SC", "Source Han Serif CN",
+        "Noto Serif CJK SC", "Noto Serif CJK", "思源宋體",
+    )),
+    ("Noto Serif SC", (
+        "方正书宋", "FZShuSong", "方正书宋_GBK", "FZShuSong-Z01", "FZShuSong-Z01S",
+        "方正书宋简体",
+    )),
+    ("Noto Serif SC", (
+        "方正小标宋", "FZXiaoBiaoSong", "方正小标宋_GBK", "FZXiaoBiaoSong-B05",
+        "FZXiaoBiaoSong-B05S", "方正小标宋简体",
+    )),
+    ("Noto Serif SC", (
+        "楷体", "KaiTi", "Kaiti", "楷体_GB2312", "KaiTi_GB2312", "simkai",
+        "STKaiti", "华文楷体", "方正楷体", "FZKai", "FZKai-Z03", "FZKai-Z03S",
+        "楷体_GBK", "Kaiti SC",
+    )),
+    ("Noto Serif SC", (
+        "仿宋", "FangSong", "Fangsong", "仿宋_GB2312", "FangSong_GB2312", "simfang",
+        "STFangsong", "华文仿宋", "方正仿宋", "FZFangSong", "FZFangSong-Z02",
+        "FZFangSong-Z02S", "仿宋_GBK", "Fangsong SC",
+    )),
+    # --- Traditional-Chinese sans -> Noto Sans TC ---
+    ("Noto Sans TC", (
+        "微軟正黑體", "微软正黑体", "Microsoft JhengHei", "MS JhengHei",
+        "Microsoft JhengHei UI", "msjh",
+    )),
+    ("Noto Sans TC", ("蘋方-繁", "蘋方", "PingFang TC", "PingFang HK", "苹方-繁")),
+    ("Noto Sans TC", ("黑體-繁", "黑體", "Heiti TC", "黑体-繁")),
+    ("Noto Sans TC", ("華康黑體", "華康儷黑", "DFHei", "DFLiHei", "DFPHei")),
+    # --- Traditional-Chinese serif -> Noto Serif TC ---
+    ("Noto Serif TC", (
+        "新細明體", "PMingLiU", "PMingLiU-ExtB", "MingLiU_HKSCS", "新细明体",
+    )),
+    ("Noto Serif TC", (
+        "細明體", "MingLiU", "MingLiU-ExtB", "MingLiU_HKSCS-ExtB", "细明体",
+    )),
+    ("Noto Serif TC", ("標楷體", "DFKai-SB", "KaiU", "BiauKai", "标楷体")),
+    ("Noto Serif TC", ("華康明體", "華康儷宋", "DFMing", "DFSong", "DFPMing")),
+    # --- Proprietary Latin office fonts -> metric-compatible Google twins ---
+    ("Arimo", ("Arial", "Arial MT", "ArialMT", "Arial Regular", "Helvetica")),
+    ("Tinos", (
+        "Times New Roman", "TimesNewRoman", "TimesNewRomanPSMT",
+        "Times New Roman PS", "Times",
+    )),
+    ("Cousine", (
+        "Courier New", "CourierNew", "CourierNewPSMT", "Courier",
+        "Consolas", "Consolas Regular",
+    )),
+    ("Carlito", ("Calibri", "Calibri Light", "Calibri Regular")),
+    ("Caladea", ("Cambria", "Cambria Math", "Cambria Regular")),
+    # Decorative/display Latin fonts (DIN Alternate, Bock Medium, Bebas Neue,
+    # Impact ...) have no metric-compatible free twin and are intentionally left
+    # unmapped so they stay reported as missing rather than silently distorted.
+]
+
+
+def _fold_font_name(name: str) -> str:
+    """Lowercase a font name and strip whitespace/separators for fuzzy matching."""
+    return re.sub(r"[\s_\-.]+", "", (name or "").strip().lower())
+
+
+def _build_font_substitute_lookup() -> Dict[str, str]:
+    lookup: Dict[str, str] = {}
+    for substitute, originals in _FONT_SUBSTITUTE_GROUPS:
+        for original in originals:
+            key = _fold_font_name(original)
+            if key:
+                lookup.setdefault(key, substitute)
+    return lookup
+
+
+_FONT_SUBSTITUTE_LOOKUP: Dict[str, str] = _build_font_substitute_lookup()
+
+
+def _lookup_font_substitute(font_name: str) -> Optional[str]:
+    """Return a Google-hosted substitute family for a font, or None if unmapped."""
+    if not font_name:
+        return None
+    folded = _fold_font_name(font_name)
+    if folded in _FONT_SUBSTITUTE_LOOKUP:
+        return _FONT_SUBSTITUTE_LOOKUP[folded]
+    # Fallback: peel off trailing weight/style tokens (e.g. "微软雅黑 Bold").
+    tokens = [t for t in re.split(r"[\s_\-.]+", (font_name or "").strip().lower()) if t]
+    while len(tokens) > 1 and tokens[-1] in _STYLE_TOKENS:
+        tokens.pop()
+        candidate = "".join(tokens)
+        if candidate in _FONT_SUBSTITUTE_LOOKUP:
+            return _FONT_SUBSTITUTE_LOOKUP[candidate]
+    return None
+
+
 def _clean_font_metadata_string(value: str) -> str:
     return "".join(
         char
@@ -906,7 +1124,7 @@ async def get_available_and_unavailable_fonts_for_pptx(
         )
 
     matched_fonts = set(found_fonts_with_url.keys())
-    fonts_to_check = sorted(raw_fonts - matched_fonts)
+    fonts_to_check_raw = sorted(raw_fonts - matched_fonts)
 
     normalized_variants: Dict[str, Set[str]] = {}
     for font_name, variants in font_variants_by_name.items():
@@ -914,8 +1132,30 @@ async def get_available_and_unavailable_fonts_for_pptx(
         if normalized_name:
             normalized_variants.setdefault(normalized_name, set()).update(variants)
 
-    fonts_to_check = [normalize_font_family_name(font) for font in fonts_to_check]
-    fonts_to_check = list(set(fonts_to_check))
+    # Auto-substitute well-known fonts Google Fonts does not host (Chinese
+    # system/foundry fonts, proprietary Latin office fonts) with a visually
+    # similar free family it does host, so they are recognized as available
+    # instead of being reported as missing.
+    substituted: List[Tuple[str, str]] = []  # (original_name, substitute_family)
+    remaining_raw: List[str] = []
+    for raw_name in fonts_to_check_raw:
+        substitute = _lookup_font_substitute(raw_name)
+        if substitute:
+            substituted.append((raw_name, substitute))
+        else:
+            remaining_raw.append(raw_name)
+
+    distinct_substitutes = sorted({sub for _, sub in substituted})
+    substitute_availability = (
+        await asyncio.gather(
+            *[check_google_font_availability(sub) for sub in distinct_substitutes]
+        )
+        if distinct_substitutes
+        else []
+    )
+    substitute_is_available = dict(zip(distinct_substitutes, substitute_availability))
+
+    fonts_to_check = list({normalize_font_family_name(font) for font in remaining_raw})
 
     availability_results: List[bool] = []
     if fonts_to_check:
@@ -934,6 +1174,21 @@ async def get_available_and_unavailable_fonts_for_pptx(
 
     for font_name, font_url in found_fonts_with_url.items():
         available_fonts.append((font_name, font_url))
+
+    for original_name, substitute in substituted:
+        if substitute_is_available.get(substitute):
+            normalized_original = normalize_font_family_name(original_name)
+            substitute_url = build_google_fonts_stylesheet_url(
+                substitute,
+                variants=normalize_font_variants(
+                    normalized_variants.get(normalized_original)
+                ),
+            )
+            available_fonts.append((original_name, substitute_url))
+        else:
+            unavailable_fonts.append(
+                (normalize_font_family_name(original_name), None)
+            )
 
     for font, is_available in zip(fonts_to_check, availability_results):
         if is_available:
