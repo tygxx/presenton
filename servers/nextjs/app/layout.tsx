@@ -80,6 +80,23 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        {/*
+          CJK 兜底字体：通过 Google Fonts 运行时加载 Noto Sans/Serif SC（含简体中文 subset）。
+          仅在缺少本地 CJK 字体（如 PingFang SC / Microsoft YaHei）时才会真正用到；
+          网络受限（如国内/离线）时加载失败也只会回退到系统 CJK 字体栈，不影响英文。
+        */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;500;700&display=swap&subset=chinese-simplified"
+        />
+      </head>
       <body
         className={`${inter.variable} ${syne.variable} ${unbounded.variable} antialiased`}
       >

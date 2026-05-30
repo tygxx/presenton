@@ -1,6 +1,7 @@
 import asyncio
 import errno
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -16,6 +17,159 @@ from templates.pptx_font_utils import (
 _LIBREOFFICE_LOCK_FILE_PATH = "/tmp/libreoffice_convert.lock"
 _LIBREOFFICE_LOCK_WAIT_TIMEOUT_SECONDS = 500
 _LIBREOFFICE_LOCK_RETRY_SECONDS = 0.1
+
+# Lightweight inline CJK detection (no extra dependency): CJK ideographs plus the
+# CJK punctuation / fullwidth blocks. Used to decide whether the deck needs a
+# Han-capable font before LibreOffice renders the PDF.
+_CJK_RANGE_PATTERN = re.compile(r"[一-鿿　-〿＀-￯]")
+# Preferred Han-capable families to probe / fall back to, in priority order.
+_CJK_FALLBACK_FAMILIES = (
+    "Noto Sans CJK SC",
+    "Noto Serif CJK SC",
+    "Noto Sans SC",
+    "Noto Serif SC",
+    "Source Han Sans SC",
+    "Source Han Serif SC",
+    "WenQuanYi Zen Hei",
+    "WenQuanYi Micro Hei",
+)
+
+
+def _text_has_cjk(value: Optional[str]) -> bool:
+    return bool(value) and _CJK_RANGE_PATTERN.search(value) is not None
+
+
+def _slide_xmls_contain_cjk(slide_xmls: List[str]) -> bool:
+    return any(_text_has_cjk(xml) for xml in slide_xmls)
+
+
+def _fc_match_has_cjk_glyphs(family: str, env: dict) -> Optional[str]:
+    """Return the file fontconfig resolves `family` to, or None on failure.
+
+    Uses the same FONTCONFIG_FILE env the conversion will use, so the probe sees
+    the alias config and any custom font dirs.
+    """
+    try:
+        result = subprocess.run(
+            ["fc-match", "-f", "%{file}\t%{family}", family],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env=env,
+        )
+    except Exception:
+        return None
+    out = (result.stdout or "").strip()
+    if not out:
+        return None
+    return out
+
+
+def _append_cjk_fallback_chain(alias_fonts_conf: str) -> None:
+    """Append an explicit CJK fallback chain to an existing fontconfig alias file.
+
+    Adds the preferred Han-capable families as fallbacks for the generic
+    sans-serif / serif / monospace families so any glyph LibreOffice cannot find
+    in the requested face is still drawn instead of becoming a tofu box. Fully
+    defensive: leaves the file untouched on any error.
+    """
+    try:
+        with open(alias_fonts_conf, "r", encoding="utf-8") as handle:
+            content = handle.read()
+        if "</fontconfig>" not in content:
+            return
+        sans_families = (
+            "Noto Sans CJK SC",
+            "Noto Sans SC",
+            "Source Han Sans SC",
+            "WenQuanYi Zen Hei",
+            "WenQuanYi Micro Hei",
+        )
+        serif_families = (
+            "Noto Serif CJK SC",
+            "Noto Serif SC",
+            "Source Han Serif SC",
+        )
+        mono_families = (
+            "Noto Sans Mono CJK SC",
+            "Noto Sans Mono",
+            "WenQuanYi Zen Hei Mono",
+        )
+
+        def _append_block(generic: str, families) -> str:
+            edits = "\n".join(
+                f"      <string>{family}</string>" for family in families
+            )
+            return f"""
+  <match target="pattern">
+    <test name="family">
+      <string>{generic}</string>
+    </test>
+    <edit name="family" mode="append" binding="weak">
+{edits}
+    </edit>
+  </match>
+"""
+
+        fallback_xml = (
+            _append_block("sans-serif", sans_families)
+            + _append_block("serif", serif_families)
+            + _append_block("monospace", mono_families)
+        )
+        updated = content.replace(
+            "</fontconfig>", f"{fallback_xml}</fontconfig>", 1
+        )
+        with open(alias_fonts_conf, "w", encoding="utf-8") as handle:
+            handle.write(updated)
+    except Exception:
+        # Best-effort enhancement only; never break conversion over it.
+        pass
+
+
+def _validate_cjk_font_availability(
+    slide_xmls: List[str], env: dict, log
+) -> None:
+    """Warn (do not fail) when a CJK deck has no Han-capable font available.
+
+    Probes the preferred CJK families through fontconfig; if at least one resolves
+    to a real, distinct file we assume Han glyphs are covered. Otherwise we emit a
+    visible warning so the silent tofu (□□□) outcome is diagnosable.
+    """
+    try:
+        if not _slide_xmls_contain_cjk(slide_xmls):
+            return
+        resolved_family: Optional[str] = None
+        for family in _CJK_FALLBACK_FAMILIES:
+            match = _fc_match_has_cjk_glyphs(family, env)
+            if not match:
+                continue
+            file_part = match.split("\t", 1)[0].strip()
+            matched_families = (
+                match.split("\t", 1)[1] if "\t" in match else ""
+            ).lower()
+            requested = family.lower()
+            # Treat as a real hit only when fontconfig returned the family we asked
+            # for (not a generic Latin fallback like DejaVu/Verdana).
+            if file_part and (
+                requested in matched_families
+                or any(tok and tok in matched_families for tok in requested.split())
+            ):
+                resolved_family = family
+                break
+        if resolved_family:
+            log("info", f"CJK font available for PDF render: {resolved_family}")
+        else:
+            log(
+                "warning",
+                "Presentation contains CJK text but no CJK-capable font "
+                f"({', '.join(_CJK_FALLBACK_FAMILIES[:4])}, ...) resolved via "
+                "fontconfig; the PDF may show missing-glyph boxes. Install a Noto "
+                "CJK / Source Han / WenQuanYi font in the render environment.",
+            )
+    except Exception as exc:
+        # Validation is purely diagnostic; never let it break the conversion.
+        log("warning", f"CJK font validation skipped due to error: {exc}")
 
 
 def _get_soffice_binary() -> str:
@@ -182,6 +336,17 @@ async def convert_pptx_to_pdf(
         )
         env = os.environ.copy()
         env["FONTCONFIG_FILE"] = alias_fonts_conf
+
+        # For decks containing CJK text, append an explicit Han fallback chain to
+        # the alias config and verify a CJK-capable font actually resolves; warn
+        # loudly (instead of silently rendering tofu) when none is available.
+        if _slide_xmls_contain_cjk(slide_xmls):
+            await asyncio.to_thread(
+                _append_cjk_fallback_chain, alias_fonts_conf
+            )
+            await asyncio.to_thread(
+                _validate_cjk_font_availability, slide_xmls, env, _log
+            )
 
         _log("info", "Starting LibreOffice PDF conversion...")
 

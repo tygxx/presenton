@@ -14,6 +14,7 @@ import { DashboardApi } from "@/app/(presentation-generator)/services/api/dashbo
 import { ApiResponseHandler } from "@/app/(presentation-generator)/services/api/api-error-handler";
 import { useFontLoader } from "@/app/(presentation-generator)/hooks/useFontLoad";
 import { Theme } from "@/app/(presentation-generator)/services/api/types";
+import { applyCjkClassToElement } from "@/app/(presentation-generator)/presentation/utils/applyPresentationThemeDom";
 import SlideScale from "@/app/(presentation-generator)/components/PresentationRender";
 import { normalizeBackendAssetUrls } from "@/utils/api";
 
@@ -205,9 +206,14 @@ const PresentationPage = ({ presentation_id, exportCookie }: PresentationPagePro
     const textFontName = theme.data.fonts.textFont.name;
     const textFontUrl = theme.data.fonts.textFont.url;
     useFontLoader({ [textFontName]: textFontUrl });
-    element.style.setProperty("font-family", `"${textFontName}"`);
-    element.style.setProperty("--heading-font-family", `"${textFontName}"`);
-    element.style.setProperty("--body-font-family", `"${textFontName}"`);
+    // 主题字体后追加 CJK 兜底栈：导出(PDF/PNG)的内联 font-family 会覆盖全局兜底，
+    // 不带 CJK 兜底则中文豆腐块，故此处与编辑器保持一致。
+    const fontStack = `"${textFontName}", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Noto Sans TC", "WenQuanYi Micro Hei", sans-serif`;
+    element.style.setProperty("font-family", fontStack);
+    element.style.setProperty("--heading-font-family", fontStack);
+    element.style.setProperty("--body-font-family", fontStack);
+    // 检测含中文则加 'cjk' class，让导出也获得去负字距/换行等集中式排版修复。
+    applyCjkClassToElement(element);
   };
 
   const slides = presentationData?.slides ?? [];

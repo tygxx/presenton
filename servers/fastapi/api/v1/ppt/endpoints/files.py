@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, File, UploadFile
 
 from constants.documents import UPLOAD_ACCEPTED_FILE_TYPES
 from models.decomposed_file_info import DecomposedFileInfo
-from services.temp_file_service import TEMP_FILE_SERVICE
+from services.temp_file_service import TEMP_FILE_SERVICE, sanitize_upload_filename
 from services.documents_loader import DocumentsLoader
 import uuid
 from utils.validators import validate_files
@@ -25,8 +25,12 @@ async def upload_files(files: Optional[List[UploadFile]]):
     temp_files: List[str] = []
     if files:
         for each_file in files:
+            # Sanitize the client-supplied filename (path traversal / null bytes)
+            # while keeping Chinese characters; create_temp_file_path sanitizes
+            # again defensively.
+            safe_name = sanitize_upload_filename(each_file.filename)
             temp_path = TEMP_FILE_SERVICE.create_temp_file_path(
-                each_file.filename, temp_dir
+                safe_name, temp_dir
             )
             with open(temp_path, "wb") as f:
                 content = await each_file.read()

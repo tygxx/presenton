@@ -6,6 +6,35 @@ from utils.get_env import (
 from utils.parsers import parse_bool_or_none
 
 
+def contains_cjk(text: str | None, threshold: float = 0.15) -> bool:
+    """Lightweight CJK heuristic (no third-party dependency).
+
+    Returns True when the share of CJK characters among non-space characters is
+    at least ``threshold``. Used to route image queries: stock libraries
+    (Pexels/Pixabay) need English search terms, whereas generative providers
+    (DALL-E/Gemini/...) accept CJK prompts directly.
+    """
+    if not text:
+        return False
+    cjk = 0
+    total = 0
+    for ch in str(text):
+        if ch.isspace():
+            continue
+        total += 1
+        code = ord(ch)
+        # CJK Unified Ideographs, CJK symbols/punctuation, fullwidth/halfwidth forms
+        if (
+            0x4E00 <= code <= 0x9FFF
+            or 0x3000 <= code <= 0x303F
+            or 0xFF00 <= code <= 0xFFEF
+        ):
+            cjk += 1
+    if total == 0:
+        return False
+    return (cjk / total) >= threshold
+
+
 def is_image_generation_disabled() -> bool:
     return parse_bool_or_none(get_disable_image_generation_env()) or False
 

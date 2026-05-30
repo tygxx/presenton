@@ -24,6 +24,7 @@ from utils.get_env import get_pixabay_api_key_env
 from utils.get_env import get_comfyui_url_env
 from utils.get_env import get_comfyui_workflow_env
 from utils.image_provider import (
+    contains_cjk,
     is_gpt_image_1_5_selected,
     is_image_generation_disabled,
     is_pixels_selected,
@@ -36,7 +37,63 @@ from utils.image_provider import (
     is_openai_compatible_selected,
 )
 from utils.asset_directory_utils import absolute_fastapi_asset_url
+import logging
 import uuid
+
+
+LOGGER = logging.getLogger(__name__)
+
+
+async def _translate_query_to_english(query: str) -> str:
+    """Translate a (CJK) stock-image search query into an English noun phrase.
+
+    Stock libraries (Pexels/Pixabay) index English keywords, so a Chinese query
+    returns few/no results. Generative providers (DALL-E/Gemini/...) understand
+    CJK prompts directly and must NOT be routed through this.
+
+    Defensive: any failure (no LLM configured, network error, empty result)
+    falls back to the original query so behavior never regresses.
+    """
+    try:
+        from llmai import get_client
+        from llmai.shared import SystemMessage, UserMessage
+
+        from utils.llm_config import get_llm_config
+        from utils.llm_provider import get_model
+        from utils.llm_utils import extract_text, get_generate_kwargs
+
+        client = get_client(config=get_llm_config())
+        model = get_model()
+
+        messages = [
+            SystemMessage(
+                content=(
+                    "You translate image search queries into concise English "
+                    "noun phrases suitable for a stock photo library. Output only "
+                    "the English search terms, no quotes, no explanation."
+                )
+            ),
+            UserMessage(content=query),
+        ]
+
+        response = await asyncio.to_thread(
+            client.generate,
+            **get_generate_kwargs(model=model, messages=messages, max_tokens=60),
+        )
+        translated = (extract_text(response.content) or "").strip().strip("\"'")
+        if translated:
+            LOGGER.info(
+                "[ImageGen] Translated stock query for search: %r -> %r",
+                query,
+                translated,
+            )
+            return translated
+    except Exception as exc:  # pragma: no cover - best-effort enhancement
+        LOGGER.warning(
+            "[ImageGen] Stock query translation failed (%s); using original query",
+            exc,
+        )
+    return query
 
 
 COMFYUI_MAX_SEED = 0xFFFFFFFFFFFFFFFF
@@ -95,6 +152,13 @@ class ImageGenerationService:
         image_prompt = prompt.get_image_prompt(
             with_theme=not self.is_stock_provider_selected()
         )
+
+        # Language routing: stock libraries (Pexels/Pixabay) only match English
+        # keywords, so translate a CJK query to English before searching.
+        # Generative providers accept CJK prompts directly and are left as-is.
+        if self.is_stock_provider_selected() and contains_cjk(image_prompt):
+            image_prompt = await _translate_query_to_english(image_prompt)
+
         print(f"Request - Generating Image for {image_prompt}")
 
         try:

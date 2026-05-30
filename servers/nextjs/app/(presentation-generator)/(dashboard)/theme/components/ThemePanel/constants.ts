@@ -23,7 +23,15 @@ export const FONT_OPTIONS: any[] = [
   { name: 'Lato', displayName: 'Lato', cssUrl: 'https://fonts.googleapis.com/css2?family=Lato:wght@100..900&display=swap' },
   { name: 'Source Sans Pro', displayName: 'Source Sans Pro', cssUrl: 'https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200..900&display=swap' },
   { name: 'Playfair Display', displayName: 'Playfair Display', cssUrl: 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400..900&display=swap' },
-  { name: 'Roboto', displayName: 'Roboto', cssUrl: 'https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap' }
+  { name: 'Roboto', displayName: 'Roboto', cssUrl: 'https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap' },
+  // ===== 中文（CJK）字体 =====
+  // 注意：cssUrl 显式带上 subset=chinese-simplified，确保下载简体中文字形；useFontLoader 也会兜底补上。
+  { name: 'Noto Sans SC', displayName: '思源黑体（Noto Sans SC）', cssUrl: 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap&subset=chinese-simplified' },
+  { name: 'Noto Serif SC', displayName: '思源宋体（Noto Serif SC）', cssUrl: 'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700&display=swap&subset=chinese-simplified' },
+  { name: 'Ma Shan Zheng', displayName: '马善政楷体（Ma Shan Zheng）', cssUrl: 'https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap&subset=chinese-simplified' },
+  { name: 'ZCOOL XiaoWei', displayName: '站酷小薇（ZCOOL XiaoWei）', cssUrl: 'https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&display=swap&subset=chinese-simplified' },
+  { name: 'ZCOOL QingKe HuangYou', displayName: '站酷庆科黄油（ZCOOL QingKe HuangYou）', cssUrl: 'https://fonts.googleapis.com/css2?family=ZCOOL+QingKe+HuangYou&display=swap&subset=chinese-simplified' },
+  { name: 'Long Cang', displayName: '龙藏行书（Long Cang）', cssUrl: 'https://fonts.googleapis.com/css2?family=Long+Cang&display=swap&subset=chinese-simplified' }
 ]
 
 export const DEFAULT_THEMES: any[] = [

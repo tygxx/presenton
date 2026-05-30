@@ -3,14 +3,49 @@
 @tailwind utilities;
 
 
+/*
+  全局字体栈：拉丁字体在前（英文/数字优先用设计字体），尾部追加 CJK 兜底字体，
+  保证中文不出现豆腐块（□）。优先本地高质量 CJK 字体（macOS/Windows），
+  其次为 Noto Sans SC（由 layout.tsx 的 <link> 按需加载），最后回退到 sans-serif。
+*/
 body {
-  font-family: var(--font-syne), var(--font-unbounded), var(--font-inter), sans-serif;
+  font-family: var(--font-syne), var(--font-unbounded), var(--font-inter),
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+    "Noto Sans TC", "WenQuanYi Micro Hei", sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/*
+  ===== CJK 集中式排版修复（仅在含中文/CJK 的幻灯片根容器上加 .cjk class 时生效）=====
+  目的：在不逐个修改几十个模板文件的前提下，集中解决中文排版问题。
+  仅作用于 .cjk 作用域，英文/拉丁场景零影响（不会被加上 .cjk class）。
+*/
+.cjk,
+.cjk * {
+  /*
+    覆盖模板里 tracking-[-1.6px] 之类的负字距——负字距会让方块汉字相互重叠。
+    中文不需要负字距，强制归一。用 !important 以压过 Tailwind 的 letter-spacing 工具类。
+  */
+  letter-spacing: normal !important;
+  /* 中文长串（无空格）需要能在任意字间换行，避免溢出/截断 */
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* 为过挤的行高设置一个 CJK 合理下限，避免上下行汉字粘连（仅抬高，不压低已够大的行高） */
+.cjk {
+  line-height: 1.4;
+}
+.cjk .leading-none,
+.cjk .leading-3,
+.cjk .leading-4,
+.cjk .leading-tight {
+  line-height: 1.25 !important;
 }
 
 @layer base {

@@ -85,6 +85,12 @@ Provide reusable TSX code which can be used as template to generate new slides w
 - For arrays, set `max` to the exact item count of the array content it represents.
 - Choose a `max` that keeps the longest allowed content from overflowing its container.
 
+# CJK / Chinese Text Rules (apply ONLY when the slide image or HTML reference contains Chinese / Japanese / Korean characters; otherwise ignore this whole section and keep Latin behavior unchanged):
+- Line height: every text element must use a relaxed leading of at least 1.6 (e.g. "leading-relaxed", "leading-loose", or "leading-[1.7]"). Never use tight leading like "leading-none" / "leading-tight" / "leading-[1.1]" on CJK text, which crowds Chinese characters.
+- Wrapping: text containers must allow CJK to wrap cleanly. Add "break-words" and an inline style with "overflowWrap: 'break-word'" and "wordBreak: 'break-word'" so long Chinese runs never overflow their container. Do not force "whitespace-nowrap" on CJK text.
+- Width estimation: one CJK character is about 1.7-2x the visual width of one Latin character. When choosing each string field's `.max(...)`, reduce the count you would have used for Latin text by roughly 40% (multiply by ~0.6) so Chinese titles and body text do not overflow or get truncated. Keep the field semantically the same; only shrink the max.
+- Keep these adjustments inside the normal flex/grid layout; do not introduce absolute positioning, scrolling, or fixed heights to compensate.
+
 # Table Rules:
 - Construct "tr -> th" by iterating over the "columns" field.
 - Construct "tr -> td" by iterating over the "rows" field.
@@ -102,6 +108,8 @@ Provide reusable TSX code which can be used as template to generate new slides w
 - Check for "PROVIDED FONTS".
 - Must use fonts only from "PROVIDED FONTS".
 - Add "font-[\"font-name\"]" to every text element in the slide.
+- A font may be annotated as "(CJK)"; such fonts can render Chinese / Japanese / Korean characters.
+- For any text element that contains CJK characters, prefer a font annotated "(CJK)". Latin-only fonts may fail to render Chinese, so do not assign a non-CJK font to Chinese text when a CJK font is provided.
 
 # Page Number Rules:
 - Identify if the slide contains page number from provided HTML reference and image.

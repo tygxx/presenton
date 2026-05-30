@@ -30,6 +30,8 @@ You need to generate structured content json based on the schema.
 
 # General Rules
 - Follow language guidelines.
+- Every schema field value (titles, body text, labels, speaker note, etc.) must be written in the requested **Slide Language**.
+- Exception: any field used as an icon/image search query (e.g. __icon_query__, icon_query, query) and any image-description/prompt field (e.g. __image_prompt__) must be written in **English** noun phrases, even when the slide language is not English, so they match English asset libraries.
 - Speaker notes must be plain text (no markdown).
 - Never exceed max character limits; do not clip mid-sentence to fit—rephrase instead.
 - Do not use emojis or $schema fields.
@@ -55,7 +57,7 @@ SLIDE_CONTENT_USER_PROMPT = """
 {current_date_time}
 
 # Icon Query And Image Prompt Language:
-English
+English (icon/image search queries and image prompts must always be English noun phrases, even when the slide body is in another language)
 
 # Slide Language:
 {language}
@@ -66,15 +68,41 @@ English
 """
 
 
-def _resolve_prompt_language(language: Optional[str]) -> str:
-    if language is None:
-        return "auto-detect"
-    s = str(language).strip()
-    if not s:
-        return "auto-detect"
-    if s.lower() in {"auto", "auto-detect"}:
-        return "auto-detect"
-    return s
+def _has_cjk(text: Optional[str]) -> bool:
+    """Lightweight heuristic: True if text contains a meaningful share of CJK characters."""
+    if not text:
+        return False
+    cjk = 0
+    total = 0
+    for ch in str(text):
+        if ch.isspace():
+            continue
+        total += 1
+        code = ord(ch)
+        # CJK Unified Ideographs, CJK symbols/punctuation, fullwidth/halfwidth forms
+        if (
+            0x4E00 <= code <= 0x9FFF
+            or 0x3000 <= code <= 0x303F
+            or 0xFF00 <= code <= 0xFFEF
+        ):
+            cjk += 1
+    if total == 0:
+        return False
+    return (cjk / total) >= 0.15
+
+
+def _resolve_prompt_language(
+    language: Optional[str], content: Optional[str] = None
+) -> str:
+    s = "" if language is None else str(language).strip()
+    if s and s.lower() not in {"auto", "auto-detect"}:
+        return s
+    # No explicit language: infer from the content instead of leaving it to the
+    # model. Declaring the target language explicitly keeps CJK decks from
+    # drifting into English.
+    if _has_cjk(content):
+        return "Chinese (Simplified) — output all body/title text in 简体中文"
+    return "auto-detect"
 
 
 def _get_schema_markdown(response_schema: Optional[dict]) -> str:
@@ -129,7 +157,7 @@ def get_system_prompt(
 def get_user_prompt(outline: str, language: Optional[str]):
     return SLIDE_CONTENT_USER_PROMPT.format(
         current_date_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        language=_resolve_prompt_language(language),
+        language=_resolve_prompt_language(language, outline),
         content=outline,
     )
 

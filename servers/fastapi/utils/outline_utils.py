@@ -81,11 +81,55 @@ def get_no_of_outlines_to_generate_for_n_slides(
         return n_slides
 
 
+def _text_has_cjk(text: Optional[str]) -> bool:
+    """Lightweight heuristic: True if text contains a meaningful share of CJK characters."""
+    if not text:
+        return False
+    cjk = 0
+    total = 0
+    for ch in str(text):
+        if ch.isspace():
+            continue
+        total += 1
+        code = ord(ch)
+        if (
+            0x4E00 <= code <= 0x9FFF
+            or 0x3000 <= code <= 0x303F
+            or 0xFF00 <= code <= 0xFFEF
+        ):
+            cjk += 1
+    if total == 0:
+        return False
+    return (cjk / total) >= 0.15
+
+
+def _toc_is_cjk(
+    language: Optional[str], outlines: List[SlideOutlineModel]
+) -> bool:
+    """Decide whether to render the TOC with Chinese labels.
+
+    Prefers an explicit language hint; otherwise falls back to detecting CJK in
+    the outline content so the default (English) behaviour is preserved.
+    """
+    if language:
+        s = str(language).strip().lower()
+        if s and s not in {"auto", "auto-detect"}:
+            if any(
+                token in s
+                for token in ("chinese", "zh", "中文", "简体", "繁體", "繁体")
+            ):
+                return True
+            # An explicit non-Chinese language: keep English labels.
+            return _text_has_cjk(language)
+    return any(_text_has_cjk(o.content) for o in outlines)
+
+
 def get_presentation_outline_model_with_toc(
     *,
     outline: PresentationOutlineModel,
     n_toc_slides: int,
     title_slide: bool,
+    language: Optional[str] = None,
 ) -> PresentationOutlineModel:
     if n_toc_slides <= 0:
         return outline
@@ -102,6 +146,9 @@ def get_presentation_outline_model_with_toc(
     if not sections:
         return outline_with_toc
 
+    use_cjk_labels = _toc_is_cjk(language, outlines_for_toc)
+    toc_heading = "## 目录" if use_cjk_labels else "## Table of Contents"
+
     toc_slides: List[SlideOutlineModel] = []
     outlines_before_toc = 1 if title_slide else 0
     total_toc_slides = len(sections)
@@ -109,7 +156,7 @@ def get_presentation_outline_model_with_toc(
 
     for section_index, section in enumerate(sections):
         section_lines = [
-            "## Table of Contents",
+            toc_heading,
             "",
         ]
 
@@ -118,9 +165,14 @@ def get_presentation_outline_model_with_toc(
             page_number = (
                 outlines_before_toc + total_toc_slides + global_outline_index + 1
             )
-            section_lines.append(
-                f"- Page number: {page_number}, Title: {outline_title}"
-            )
+            if use_cjk_labels:
+                section_lines.append(
+                    f"- 第 {page_number} 页：{outline_title}"
+                )
+            else:
+                section_lines.append(
+                    f"- Page number: {page_number}, Title: {outline_title}"
+                )
             global_outline_index += 1
 
         toc_slides.append(

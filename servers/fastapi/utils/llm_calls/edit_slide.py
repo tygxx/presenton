@@ -16,15 +16,37 @@ from utils.schema_utils import (
 )
 
 
-def _resolve_prompt_language(language: Optional[str]) -> str:
-    if language is None:
-        return "auto-detect"
-    s = str(language).strip()
-    if not s:
-        return "auto-detect"
-    if s.lower() in {"auto", "auto-detect"}:
-        return "auto-detect"
-    return s
+def _has_cjk(text: Optional[str]) -> bool:
+    """Lightweight heuristic: True if text contains a meaningful share of CJK characters."""
+    if not text:
+        return False
+    cjk = 0
+    total = 0
+    for ch in str(text):
+        if ch.isspace():
+            continue
+        total += 1
+        code = ord(ch)
+        if (
+            0x4E00 <= code <= 0x9FFF
+            or 0x3000 <= code <= 0x303F
+            or 0xFF00 <= code <= 0xFFEF
+        ):
+            cjk += 1
+    if total == 0:
+        return False
+    return (cjk / total) >= 0.15
+
+
+def _resolve_prompt_language(
+    language: Optional[str], content: Optional[str] = None
+) -> str:
+    s = "" if language is None else str(language).strip()
+    if s and s.lower() not in {"auto", "auto-detect"}:
+        return s
+    if _has_cjk(content):
+        return "Chinese (Simplified) — keep all field values in 简体中文"
+    return "auto-detect"
 
 
 def get_system_prompt(
@@ -55,7 +77,9 @@ def get_system_prompt(
     {verbosity or ""}
 
     # Notes
-    - Provide output in language mentioned in **Input**.
+    - Provide output in language mentioned in **Input** (see **Slide Content Language**).
+    - All field values in the output (titles, body text, labels, speaker note, etc.) must use the **Slide Content Language**.
+    - Exception: icon/image search queries (**Icon queries**, fields like __icon_query__) and **Image prompts** (e.g. __image_prompt__) must always be written in **English** noun phrases, even when the slide content language is not English, so they match English asset libraries.
     - The goal is to change Slide data based on the provided prompt.
     - Do not change **Image prompts** and **Icon queries** if not asked for in prompt.
     - Generate **Image prompts** and **Icon queries** if asked to generate or change in prompt.
@@ -69,10 +93,13 @@ def get_system_prompt(
 
 
 def get_user_prompt(prompt: str, slide_data: dict, language: str):
-    display_language = _resolve_prompt_language(language)
+    # Fall back to detecting the language from the existing slide data (and the
+    # user's prompt) so CJK slides keep their language even when none is passed.
+    detection_source = f"{slide_data}\n{prompt}"
+    display_language = _resolve_prompt_language(language, detection_source)
     return f"""
         ## Icon Query And Image Prompt Language
-        English
+        English (icon/image search queries and image prompts must always be English noun phrases, even when the slide content is in another language)
 
         ## Current Date and Time
         {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}

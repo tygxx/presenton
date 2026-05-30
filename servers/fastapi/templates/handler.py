@@ -153,6 +153,93 @@ class CloneSlideLayoutRequest(BaseModel):
     layout_name: Optional[str] = None
 
 
+# Keywords that, when present in a font's display name, strongly indicate the
+# font carries Chinese / Japanese / Korean glyphs. Used to hint the vision model
+# which fonts can render CJK text. Lowercased substring match, ASCII-only here;
+# any font name that itself contains CJK characters is detected separately.
+_CJK_FONT_NAME_KEYWORDS = (
+    "cjk",
+    "noto sans sc",
+    "noto serif sc",
+    "noto sans tc",
+    "noto serif tc",
+    "noto sans hk",
+    "noto sans jp",
+    "noto serif jp",
+    "noto sans kr",
+    "noto serif kr",
+    "source han",
+    "yahei",  # Microsoft YaHei
+    "simsun",
+    "simhei",
+    "simkai",
+    "kaiti",
+    "fangsong",
+    "songti",
+    "heiti",
+    "nsimsun",
+    "dengxian",  # 等线
+    "msyh",
+    "pingfang",
+    "hiragino",
+    "stsong",
+    "stkaiti",
+    "stheiti",
+    "stfangsong",
+    "wenquanyi",
+    "wqy",
+    "droid sans fallback",
+    "alibaba",  # Alibaba PuHuiTi etc.
+    "puhuiti",
+    "siyuan",  # 思源 (Source Han, Chinese name)
+    "zcool",
+    "mincho",
+    "gothic",
+    "meiryo",
+    "malgun",
+    "gulim",
+    "batang",
+    "dotum",
+    "nanum",
+)
+
+
+def _has_cjk_chars(text: str) -> bool:
+    """Heuristic CJK detection: any CJK ideograph or Chinese/Japanese punctuation /
+    fullwidth form present. Kept dependency-free per project guidelines."""
+    if not text:
+        return False
+    for ch in text:
+        code = ord(ch)
+        if (
+            0x4E00 <= code <= 0x9FFF  # CJK Unified Ideographs
+            or 0x3400 <= code <= 0x4DBF  # CJK Extension A
+            or 0x3000 <= code <= 0x303F  # CJK symbols and punctuation
+            or 0x3040 <= code <= 0x30FF  # Hiragana + Katakana
+            or 0xAC00 <= code <= 0xD7A3  # Hangul syllables
+            or 0xFF00 <= code <= 0xFFEF  # Halfwidth/Fullwidth forms
+        ):
+            return True
+    return False
+
+
+def _is_cjk_font(font_name: str) -> bool:
+    """Best-effort guess whether a font can render CJK text, from its name only.
+
+    Defensive: never raises; on any failure returns False so Latin/English
+    behavior is unchanged.
+    """
+    try:
+        if not font_name:
+            return False
+        if _has_cjk_chars(font_name):
+            return True
+        lowered = font_name.lower()
+        return any(keyword in lowered for keyword in _CJK_FONT_NAME_KEYWORDS)
+    except Exception:
+        return False
+
+
 _THINK_BLOCK_RE = re.compile(r"<think\b[^>]*>.*?</think>", re.DOTALL | re.IGNORECASE)
 _TSX_CODE_START_RE = re.compile(
     r"(?m)^\s*(?:import\b|export\b|const\s+Schema\b|const\s+dynamicSlideLayout\b)"
@@ -474,8 +561,16 @@ async def _create_slide_layout_impl(
 
     fonts_text = ""
     if template_info.fonts:
-        font_names = [font.replace(" ", "_") for font in template_info.fonts.keys()]
-        fonts_text = "#PROVIDED FONTS\n- " + "\n- ".join(font_names)
+        font_lines = []
+        for font in template_info.fonts.keys():
+            # Keep the font-family token (spaces -> underscores) unchanged so the
+            # model still emits font-["..."] correctly; only append a CJK marker.
+            token = font.replace(" ", "_")
+            if _is_cjk_font(font):
+                font_lines.append(f"{token} (CJK)")
+            else:
+                font_lines.append(token)
+        fonts_text = "#PROVIDED FONTS\n- " + "\n- ".join(font_lines)
 
     user_text = f"{fonts_text}\n\n#SLIDE HTML REFERENCE\n{slide_html}"
     react_component = await generate_slide_layout_code(

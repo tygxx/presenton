@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import tempfile
 import urllib
 import zipfile
@@ -122,6 +123,44 @@ _STYLE_TOKENS = {
     "ultraexpanded",
 }
 _STYLE_MODIFIERS = {"semi", "demi", "extra", "ultra"}
+
+# Chinese weight/style suffixes that foundries append to a family name, often
+# without any separator (e.g. "微软雅黑粗", "思源黑体细"). Listed longest-first so
+# multi-char tokens ("超粗", "特粗") are stripped before single-char ones.
+#
+# NOTE: single chars that double as typeface-category names (黑 as in 黑体, 中, 标,
+# 正, 重) are deliberately excluded — stripping them would mangle real family names
+# like "微软雅黑" or "黑体". Only unambiguous weight words remain.
+_CJK_WEIGHT_TOKENS: Tuple[str, ...] = (
+    "极细", "纤细", "超细", "特细", "细体",
+    "超粗", "特粗", "极粗", "粗体", "中等", "标准", "常规", "普通",
+    "纤", "细", "粗",
+)
+_CJK_RANGE_PATTERN = re.compile(r"[㐀-鿿　-〿＀-￯]")
+
+
+def _contains_cjk(value: Optional[str]) -> bool:
+    """Heuristic: True when the string carries CJK ideographs / fullwidth marks."""
+    if not value:
+        return False
+    return _CJK_RANGE_PATTERN.search(value) is not None
+
+
+def _strip_cjk_weight_suffix(name: str) -> str:
+    """Trim a trailing Chinese weight token from a CJK family name.
+
+    Only strips when a real family stub remains and at least one CJK character is
+    left, so plain weight words ("粗体") or non-CJK names are never mangled.
+    """
+    if not _contains_cjk(name):
+        return name
+    stripped = name.strip()
+    for token in _CJK_WEIGHT_TOKENS:
+        if len(stripped) > len(token) and stripped.endswith(token):
+            candidate = stripped[: -len(token)].rstrip(" -_·")
+            if candidate and _contains_cjk(candidate):
+                return candidate
+    return stripped
 
 
 # ---------------------------------------------------------------------------
@@ -275,11 +314,45 @@ _FONT_SUBSTITUTE_GROUPS: List[Tuple[str, Tuple[str, ...]]] = [
     # --- Traditional-Chinese sans -> Noto Sans TC ---
     ("Noto Sans TC", (
         "微軟正黑體", "微软正黑体", "Microsoft JhengHei", "MS JhengHei",
-        "Microsoft JhengHei UI", "msjh",
+        "Microsoft JhengHei UI", "Microsoft JhengHei Light", "Microsoft JhengHei Bold",
+        "msjh", "msjhl", "msjhbd",
     )),
-    ("Noto Sans TC", ("蘋方-繁", "蘋方", "PingFang TC", "PingFang HK", "苹方-繁")),
-    ("Noto Sans TC", ("黑體-繁", "黑體", "Heiti TC", "黑体-繁")),
-    ("Noto Sans TC", ("華康黑體", "華康儷黑", "DFHei", "DFLiHei", "DFPHei")),
+    ("Noto Sans TC", (
+        "蘋方-繁", "蘋方", "蘋方 繁", "PingFang TC", "PingFangTC", "PingFang HK",
+        "PingFangHK", "PingFang TC Regular", "PingFang TC Medium", "PingFang TC Light",
+        "PingFang TC Semibold", "苹方-繁",
+    )),
+    ("Noto Sans TC", ("黑體-繁", "黑體", "Heiti TC", "Heiti TC Light", "Heiti TC Medium", "黑体-繁")),
+    # 思源黑體 / Noto Sans CJK TC (Traditional)
+    ("Noto Sans TC", (
+        "思源黑體", "思源黑體 TC", "思源黑體 TW", "思源黑体 TC", "思源黑体 TW",
+        "Source Han Sans TC", "Source Han Sans TW", "Source Han Sans HC",
+        "Source Han Sans TC Regular", "Source Han Sans TC Medium",
+        "Source Han Sans TC Bold", "Source Han Sans TC Light",
+        "Noto Sans CJK TC", "Noto Sans CJK TC Regular", "Noto Sans CJK TC Bold",
+        "Noto Sans CJK HK", "SourceHanSansTC", "SourceHanSansTW", "SourceHanSansHC",
+    )),
+    # 華康 (DynaFont / DynaComware) 黑體系列
+    ("Noto Sans TC", (
+        "華康黑體", "華康儷黑", "華康中黑體", "華康超黑體", "華康新特黑體",
+        "華康儷中黑", "華康儷粗黑", "DFHei", "DFLiHei", "DFPHei", "DFHeiStd",
+        "DFGothic", "DFPGothic", "DFKaiHei", "DFLiHei-Bd", "華康圓體", "DFYuan",
+        "DFPYuanW", "華康儷圓",
+    )),
+    # 文鼎 (Arphic) 黑體系列
+    ("Noto Sans TC", (
+        "文鼎黑體", "文鼎中黑", "文鼎特黑", "文鼎powerverbatim", "AR PL UKai",
+        "文鼎中圓", "AR HeitiM", "AR HeitiB", "ARHei", "ARPLNew", "文鼎新黑",
+    )),
+    # 造字工房 (Makefont) 繁體黑體變體
+    ("Noto Sans TC", (
+        "造字工房黑體", "造字工房尚黑", "造字工房悅黑", "MFShangHei", "MFYueHei",
+        "MFLiHei_繁", "造字工房力黑繁",
+    )),
+    # 蒙納 (Monotype) 繁體黑體
+    ("Noto Sans TC", (
+        "蒙納黑體", "蒙納超明", "Mona Hei", "MHei", "MNHei", "MSungHK",
+    )),
     # --- Traditional-Chinese serif -> Noto Serif TC ---
     ("Noto Serif TC", (
         "新細明體", "PMingLiU", "PMingLiU-ExtB", "MingLiU_HKSCS", "新细明体",
@@ -287,8 +360,25 @@ _FONT_SUBSTITUTE_GROUPS: List[Tuple[str, Tuple[str, ...]]] = [
     ("Noto Serif TC", (
         "細明體", "MingLiU", "MingLiU-ExtB", "MingLiU_HKSCS-ExtB", "细明体",
     )),
-    ("Noto Serif TC", ("標楷體", "DFKai-SB", "KaiU", "BiauKai", "标楷体")),
-    ("Noto Serif TC", ("華康明體", "華康儷宋", "DFMing", "DFSong", "DFPMing")),
+    ("Noto Serif TC", (
+        "標楷體", "DFKai-SB", "DFKaiShu", "KaiU", "BiauKai", "華康楷書體",
+        "DFKaiSho", "文鼎楷書", "AR PL KaitiM", "標楷體 繁", "标楷体",
+    )),
+    # 思源宋體 / Noto Serif CJK TC (Traditional)
+    ("Noto Serif TC", (
+        "思源宋體", "思源宋體 TC", "思源宋體 TW", "思源宋体 TC", "思源宋体 TW",
+        "Source Han Serif TC", "Source Han Serif TW", "Source Han Serif HC",
+        "Source Han Serif TC Regular", "Source Han Serif TC Bold",
+        "Noto Serif CJK TC", "Noto Serif CJK HK", "SourceHanSerifTC",
+        "SourceHanSerifTW", "SourceHanSerifHC",
+    )),
+    # 華康 / 文鼎 明體 (serif) 系列
+    ("Noto Serif TC", (
+        "華康明體", "華康儷宋", "華康中明體", "華康粗明體", "華康新特明體",
+        "DFMing", "DFSong", "DFPMing", "DFMingStd", "DFPHaiBao", "華康儷中宋",
+        "文鼎明體", "文鼎中明", "文鼎粗明", "AR PL Mingti2L", "AR PL SungtiL",
+        "ARMingti", "ARSungti", "文鼎報宋",
+    )),
     # --- Proprietary Latin office fonts -> metric-compatible Google twins ---
     ("Arimo", ("Arial", "Arial MT", "ArialMT", "Arial Regular", "Helvetica")),
     ("Tinos", (
@@ -301,6 +391,26 @@ _FONT_SUBSTITUTE_GROUPS: List[Tuple[str, Tuple[str, ...]]] = [
     )),
     ("Carlito", ("Calibri", "Calibri Light", "Calibri Regular")),
     ("Caladea", ("Cambria", "Cambria Math", "Cambria Regular")),
+    # --- Monospace / fixed-pitch Chinese fonts -> Noto Sans Mono ---
+    # Google Fonts does not host the Noto CJK Mono families via the CSS2 API, so
+    # we approximate with Noto Sans Mono for correct fixed-pitch Latin metrics in
+    # code blocks; CJK glyphs come from the fontconfig fallback chain at PDF time.
+    ("Noto Sans Mono", (
+        # Simplified-Chinese fixed-pitch families
+        "等距更纱黑体", "等距更纱黑体 SC", "更纱黑体 Mono", "更纱黑体 Mono SC",
+        "Sarasa Mono SC", "Sarasa Fixed SC", "Sarasa Mono CL", "SarasaMonoSC",
+        "文泉驿等宽微米黑", "文泉驿等宽正黑", "WenQuanYi Micro Hei Mono",
+        "WenQuanYi Zen Hei Mono", "wqy-microhei-mono", "wqy-zenhei-mono",
+        "思源等宽", "思源黑体 Mono", "Source Han Mono", "Source Han Mono SC",
+        "SourceHanMono", "SourceHanMonoSC", "Noto Sans Mono CJK SC",
+        "冬青黑体等宽", "苹方等宽", "PingFang SC Mono",
+    )),
+    ("Noto Sans Mono", (
+        # Traditional-Chinese fixed-pitch families
+        "等距更纱黑体 TC", "更纱黑体 Mono TC", "Sarasa Mono TC", "Sarasa Fixed TC",
+        "SarasaMonoTC", "Source Han Mono TC", "SourceHanMonoTC",
+        "Noto Sans Mono CJK TC", "蘋方等寬",
+    )),
     # Decorative/display Latin fonts (DIN Alternate, Bock Medium, Bebas Neue,
     # Impact ...) have no metric-compatible free twin and are intentionally left
     # unmapped so they stay reported as missing rather than silently distorted.
@@ -339,6 +449,14 @@ def _lookup_font_substitute(font_name: str) -> Optional[str]:
         candidate = "".join(tokens)
         if candidate in _FONT_SUBSTITUTE_LOOKUP:
             return _FONT_SUBSTITUTE_LOOKUP[candidate]
+    # CJK fallback: foundry weight suffixes are usually glued on without a
+    # separator (e.g. "微软雅黑粗", "思源黑体细"), so the split above misses them.
+    if _contains_cjk(font_name):
+        cjk_stub = _strip_cjk_weight_suffix(font_name.strip())
+        if cjk_stub and cjk_stub != font_name.strip():
+            stub_folded = _fold_font_name(cjk_stub)
+            if stub_folded and stub_folded in _FONT_SUBSTITUTE_LOOKUP:
+                return _FONT_SUBSTITUTE_LOOKUP[stub_folded]
     return None
 
 
@@ -383,12 +501,46 @@ def normalize_font_family_name(raw_name: str) -> str:
             continue
         if lower_tok in _STYLE_TOKENS or lower_tok in _STYLE_MODIFIERS:
             continue
+        # Drop a trailing Chinese weight word that ended up as its own token
+        # (e.g. "微软雅黑-粗" -> ["微软雅黑", "粗"]); only when CJK text precedes it.
+        if (
+            index == len(tokens_original) - 1
+            and tok in _CJK_WEIGHT_TOKENS
+            and any(_contains_cjk(t) for t in tokens_filtered)
+        ):
+            continue
         tokens_filtered.append(tok)
     if not tokens_filtered:
         tokens_filtered = tokens_original
     normalized = " ".join(tokens_filtered).strip()
     normalized = re.sub(r"\s+", " ", normalized)
+    # Separator-less CJK suffix (e.g. "微软雅黑粗", "思源黑体细") — guarded so plain
+    # Latin and bare weight words are never touched.
+    normalized = _strip_cjk_weight_suffix(normalized)
     return normalized
+
+
+# CJK Google Fonts families do not ship an italic/oblique cut, so requesting one
+# yields an invalid stylesheet. They also benefit from an explicit Unicode subset
+# so the served file actually contains the Han glyphs we need. Map each hosted CJK
+# family to the subset(s) it should request.
+_CJK_GOOGLE_FONT_SUBSETS: Dict[str, Tuple[str, ...]] = {
+    "noto sans sc": ("chinese-simplified",),
+    "noto serif sc": ("chinese-simplified",),
+    "noto sans tc": ("chinese-traditional",),
+    "noto serif tc": ("chinese-traditional",),
+    "noto sans hk": ("chinese-traditional",),
+    "noto serif hk": ("chinese-traditional",),
+    "noto sans jp": ("japanese",),
+    "noto serif jp": ("japanese",),
+    "noto sans kr": ("korean",),
+    "noto serif kr": ("korean",),
+}
+
+
+def _cjk_google_font_subsets(family_name: str) -> Optional[Tuple[str, ...]]:
+    """Return the Google Fonts subset(s) for a hosted CJK family, else None."""
+    return _CJK_GOOGLE_FONT_SUBSETS.get((family_name or "").strip().lower())
 
 
 def build_google_fonts_stylesheet_url(
@@ -399,15 +551,32 @@ def build_google_fonts_stylesheet_url(
     encoded_family = urllib.parse.quote_plus(family_name)
     requested_variants = set(variants or [])
     requested_weights = set(weights or [])
+    cjk_subsets = _cjk_google_font_subsets(family_name)
+    # CJK families have no italic cut on Google Fonts; requesting one is invalid.
+    is_cjk = cjk_subsets is not None
+    subset_suffix = (
+        f"&subset={urllib.parse.quote_plus(','.join(cjk_subsets))}"
+        if cjk_subsets
+        else ""
+    )
     if requested_variants:
         requested_weights = {400}
         if "bold" in requested_variants or "bold_italic" in requested_variants:
             requested_weights.add(700)
+        # Honour named non-standard weights (semibold/medium/...) so we fetch the
+        # matching cut instead of falling back to plain 400/700.
+        for variant in requested_variants:
+            extended_weight = _EXTENDED_WEIGHT_VARIANTS.get(variant)
+            if extended_weight:
+                requested_weights.add(extended_weight)
+    want_italic = (not is_cjk) and (
+        "italic" in requested_variants or "bold_italic" in requested_variants
+    )
     if requested_weights:
         normalized_weights = sorted(
             {int(weight) for weight in requested_weights if int(weight) > 0}
         )
-        if "italic" in requested_variants or "bold_italic" in requested_variants:
+        if want_italic:
             italic_weights = set()
             if "italic" in requested_variants:
                 italic_weights.add(400)
@@ -419,14 +588,18 @@ def build_google_fonts_stylesheet_url(
             )
             return (
                 "https://fonts.googleapis.com/css2"
-                f"?family={encoded_family}:ital,wght@{weights_param}&display=swap"
+                f"?family={encoded_family}:ital,wght@{weights_param}"
+                f"{subset_suffix}&display=swap"
             )
         weight_selector = ";".join(str(weight) for weight in normalized_weights)
         return (
             "https://fonts.googleapis.com/css2"
-            f"?family={encoded_family}:wght@{weight_selector}&display=swap"
+            f"?family={encoded_family}:wght@{weight_selector}{subset_suffix}&display=swap"
         )
-    return f"https://fonts.googleapis.com/css2?family={encoded_family}&display=swap"
+    return (
+        "https://fonts.googleapis.com/css2"
+        f"?family={encoded_family}{subset_suffix}&display=swap"
+    )
 
 
 def _resolve_theme_typeface(
@@ -584,12 +757,47 @@ def extract_raw_fonts_and_embedded_details(
     return raw_fonts, emb_font_details, emb_font_paths
 
 
+# Named weight variants beyond plain regular/bold that we still want to surface
+# (e.g. font files / runs that explicitly carry a 600+ "semibold"/"medium" weight).
+# Mapping each to an approximate Google Fonts numeric weight so the downstream URL
+# builder can request the right cut instead of silently dropping the variant.
+_EXTENDED_WEIGHT_VARIANTS: Dict[str, int] = {
+    "thin": 100,
+    "extralight": 200,
+    "extra_light": 200,
+    "ultralight": 200,
+    "light": 300,
+    "medium": 500,
+    "semibold": 600,
+    "demibold": 600,
+    "extrabold": 800,
+    "extra_bold": 800,
+    "ultrabold": 800,
+    "black": 900,
+    "heavy": 900,
+    "extrablack": 900,
+    "extra_black": 900,
+    "ultrablack": 900,
+}
+
+
 def normalize_font_variants(variants: Optional[Sequence[str]]) -> List[str]:
     order = ("regular", "bold", "italic", "bold_italic")
     variant_set = set(variants or [])
     if not variant_set:
         variant_set = {"regular"}
-    return [variant for variant in order if variant in variant_set]
+    normalized = [variant for variant in order if variant in variant_set]
+    # Preserve non-standard weight variants (semibold/demibold/medium/...) instead
+    # of silently discarding them; they sort after the canonical four for
+    # deterministic, backward-compatible output.
+    extras = sorted(
+        v
+        for v in variant_set
+        if v not in order and v in _EXTENDED_WEIGHT_VARIANTS
+    )
+    if not normalized and not extras:
+        normalized = ["regular"]
+    return normalized + extras
 
 
 def _merge_font_variants(
@@ -1384,6 +1592,349 @@ def _replace_fonts_in_pptx_xml(
             dst.writestr(info, data)
 
 
+# ---------------------------------------------------------------------------
+# OpenXML font embedding (defensive).
+#
+# Renaming font references inside the XML keeps the deck looking right only on
+# machines that already have the substitute (Noto CJK) families installed. To
+# survive moving the .pptx to another machine we additionally embed the actual
+# TrueType files into ppt/fonts/ and wire up the OpenXML parts PowerPoint expects.
+#
+# EVERY step here is best-effort: any failure (missing fontconfig, missing font
+# file, malformed XML, ...) makes the whole embed a no-op and the previously
+# written (rename-only) output_path is left untouched. Embedding must never raise
+# or produce a corrupt file.
+# ---------------------------------------------------------------------------
+_FONT_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/font"
+_CT_NS = "http://schemas.openxmlformats.org/package/2006/content-types"
+# Schema order of CT_Presentation children; embeddedFontLst must slot in here.
+_PRESENTATION_CHILD_ORDER = (
+    "sldMasterIdLst",
+    "notesMasterIdLst",
+    "handoutMasterIdLst",
+    "sldIdLst",
+    "sldSz",
+    "notesSz",
+    "smartTags",
+    "embeddedFontLst",
+    "custShowLst",
+    "photoAlbum",
+    "custDataLst",
+    "kinsoku",
+    "defaultTextStyle",
+    "modifyVerifier",
+    "extLst",
+)
+
+
+def _fc_match_font_file(family_name: str) -> Optional[str]:
+    """Resolve a family name to an on-disk TTF/OTF/TTC path via fontconfig.
+
+    fc-match always returns *some* file, even when the requested family is not
+    installed, so we verify the matched family list actually contains the family
+    we asked for. Returns None when fontconfig is unavailable, the match is a
+    mismatch, or the file is not a usable sfnt container.
+    """
+    if not family_name or not family_name.strip():
+        return None
+    try:
+        result = subprocess.run(
+            ["fc-match", "-f", "%{file}\t%{family}", family_name],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except Exception:
+        return None
+    out = (result.stdout or "").strip()
+    if not out or "\t" not in out:
+        return None
+    file_path, matched_families = out.split("\t", 1)
+    file_path = file_path.strip()
+    if not file_path or not os.path.isfile(file_path):
+        return None
+    if os.path.splitext(file_path)[1].lower() not in (".ttf", ".otf", ".ttc", ".otc"):
+        return None
+    # Confirm the match is genuine: the requested family must appear among the
+    # matched family aliases (case/space-insensitive). Otherwise fontconfig just
+    # gave us its generic fallback and embedding it would be wrong.
+    requested = _fold_font_name(family_name)
+    candidates = {
+        _fold_font_name(fam) for fam in matched_families.split(",") if fam.strip()
+    }
+    if requested and not any(
+        requested == cand or requested in cand or cand in requested
+        for cand in candidates
+        if cand
+    ):
+        return None
+    return file_path
+
+
+def _read_font_bytes_for_embedding(file_path: str) -> Optional[bytes]:
+    """Read a font file's bytes, flattening .ttc/.otc collections to a single face."""
+    try:
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext in (".ttc", ".otc"):
+            # PowerPoint embeds single faces; extract the first face from a collection.
+            try:
+                font = TTFont(file_path, fontNumber=0)
+                buffer = tempfile.NamedTemporaryFile(
+                    delete=False, suffix=".ttf"
+                )
+                tmp_path = buffer.name
+                buffer.close()
+                try:
+                    font.save(tmp_path)
+                    font.close()
+                    with open(tmp_path, "rb") as handle:
+                        return handle.read()
+                finally:
+                    try:
+                        os.unlink(tmp_path)
+                    except Exception:
+                        pass
+            except Exception:
+                return None
+        with open(file_path, "rb") as handle:
+            return handle.read()
+    except Exception:
+        return None
+
+
+def _collect_embed_target_families(
+    font_mapping: Dict[str, str],
+    font_variant_mapping: Optional[Dict[str, Dict[str, str]]],
+) -> List[str]:
+    """Collect the distinct destination families we should try to embed.
+
+    Only CJK substitute families are worth embedding (those are what go missing
+    across machines); Latin twins like Arimo/Tinos are widely available and skipped.
+    """
+    targets: List[str] = []
+    seen: Set[str] = set()
+
+    def _consider(name: Optional[str]) -> None:
+        if not name:
+            return
+        cleaned = name.strip()
+        if not cleaned:
+            return
+        key = cleaned.lower()
+        if key in seen:
+            return
+        # Embed CJK Noto families and anything else that itself carries CJK text.
+        if _cjk_google_font_subsets(cleaned) is None and not _contains_cjk(cleaned):
+            return
+        seen.add(key)
+        targets.append(cleaned)
+
+    for dst in (font_mapping or {}).values():
+        _consider(dst)
+    for variant_map in (font_variant_mapping or {}).values():
+        for dst in (variant_map or {}).values():
+            _consider(dst)
+    return targets
+
+
+def _embed_fonts_in_pptx(
+    pptx_path: str,
+    font_mapping: Dict[str, str],
+    font_variant_mapping: Optional[Dict[str, Dict[str, str]]],
+) -> bool:
+    """Embed CJK substitute font files into an already-written PPTX, in place.
+
+    Returns True when at least one font was embedded. On any error the file is
+    rewritten back to its original bytes so the caller's rename-only output stays
+    intact. Never raises.
+    """
+    families = _collect_embed_target_families(font_mapping, font_variant_mapping)
+    if not families:
+        return False
+
+    # Resolve each family to real font bytes; skip families we cannot locate.
+    resolved: List[Tuple[str, bytes]] = []
+    for family in families:
+        file_path = _fc_match_font_file(family)
+        if not file_path:
+            continue
+        font_bytes = _read_font_bytes_for_embedding(file_path)
+        if not font_bytes:
+            continue
+        resolved.append((family, font_bytes))
+    if not resolved:
+        return False
+
+    original_bytes: Optional[bytes] = None
+    try:
+        with open(pptx_path, "rb") as handle:
+            original_bytes = handle.read()
+
+        pres_rels_name = "ppt/_rels/presentation.xml.rels"
+        with zipfile.ZipFile(pptx_path, "r") as zip_ref:
+            names = zip_ref.namelist()
+            name_set = set(names)
+            existing = {name: zip_ref.read(name) for name in names}
+
+        content_types_raw = existing.get("[Content_Types].xml")
+        presentation_raw = existing.get("ppt/presentation.xml")
+        if content_types_raw is None or presentation_raw is None:
+            return False
+
+        # Skip when the deck already declares embedded fonts to avoid clobbering.
+        if b"embeddedFontLst" in presentation_raw:
+            return False
+
+        pres_rels_raw = existing.get(pres_rels_name)
+
+        # 1) Allocate font part names + relationship ids.
+        existing_rel_ids = {
+            rid.decode("ascii")
+            for rid in re.findall(rb'Id="(rId\d+)"', pres_rels_raw or b"")
+        }
+
+        def _next_rel_id() -> str:
+            n = 1
+            while f"rId{n}" in existing_rel_ids:
+                n += 1
+            rid = f"rId{n}"
+            existing_rel_ids.add(rid)
+            return rid
+
+        font_parts: Dict[str, bytes] = {}  # part name -> font bytes
+        # (typeface, rId, part_target_relative_to_ppt)
+        embed_entries: List[Tuple[str, str, str]] = []
+        next_font_index = 1
+        for family, font_bytes in resolved:
+            part_name = f"ppt/fonts/font{next_font_index}.fntdata"
+            while part_name in name_set or part_name in font_parts:
+                next_font_index += 1
+                part_name = f"ppt/fonts/font{next_font_index}.fntdata"
+            next_font_index += 1
+            font_parts[part_name] = font_bytes
+            rid = _next_rel_id()
+            # Relationship targets in presentation.xml.rels are relative to ppt/.
+            embed_entries.append((family, rid, part_name[len("ppt/"):]))
+
+        # 2) [Content_Types].xml — ensure the fntdata default extension exists.
+        content_types_xml = _ensure_fntdata_content_type(content_types_raw)
+
+        # 3) presentation.xml.rels — append font relationships.
+        pres_rels_xml = _append_font_relationships(pres_rels_raw, embed_entries)
+
+        # 4) presentation.xml — embedTrueTypeFonts flag + <p:embeddedFontLst>.
+        presentation_xml = _inject_embedded_font_list(presentation_raw, embed_entries)
+        if presentation_xml is None:
+            return False
+
+        # 5) Rewrite the archive with the new + amended parts.
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix=".pptx", dir=os.path.dirname(pptx_path) or None)
+        os.close(tmp_fd)
+        overrides = {
+            "[Content_Types].xml": content_types_xml,
+            "ppt/presentation.xml": presentation_xml,
+            pres_rels_name: pres_rels_xml,
+        }
+        try:
+            with zipfile.ZipFile(
+                tmp_path, "w", compression=zipfile.ZIP_DEFLATED
+            ) as dst:
+                for name in names:
+                    dst.writestr(name, overrides.get(name, existing[name]))
+                # presentation.xml.rels may be brand new.
+                if pres_rels_name not in name_set:
+                    dst.writestr(pres_rels_name, pres_rels_xml)
+                for part_name, font_bytes in font_parts.items():
+                    dst.writestr(part_name, font_bytes)
+            os.replace(tmp_path, pptx_path)
+        finally:
+            if os.path.exists(tmp_path):
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
+        return True
+    except Exception:
+        # Restore original bytes on any failure so the rename-only output stays valid.
+        if original_bytes is not None:
+            try:
+                with open(pptx_path, "wb") as handle:
+                    handle.write(original_bytes)
+            except Exception:
+                pass
+        return False
+
+
+def _ensure_fntdata_content_type(content_types_raw: bytes) -> bytes:
+    """Add a <Default Extension="fntdata" .../> to [Content_Types].xml if absent."""
+    ET.register_namespace("", _CT_NS)
+    root = ET.fromstring(content_types_raw)
+    for default in root.findall(f"{{{_CT_NS}}}Default"):
+        if (default.get("Extension") or "").lower() == "fntdata":
+            return content_types_raw
+    default = ET.Element(f"{{{_CT_NS}}}Default")
+    default.set("Extension", "fntdata")
+    default.set("ContentType", "application/x-fontdata")
+    root.insert(0, default)
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
+def _append_font_relationships(
+    pres_rels_raw: Optional[bytes],
+    embed_entries: Sequence[Tuple[str, str, str]],
+) -> bytes:
+    """Append font relationships to presentation.xml.rels (creating it if needed)."""
+    ET.register_namespace("", REL_NS)
+    if pres_rels_raw:
+        root = ET.fromstring(pres_rels_raw)
+    else:
+        root = ET.Element(f"{{{REL_NS}}}Relationships")
+    for _family, rid, target in embed_entries:
+        rel = ET.SubElement(root, f"{{{REL_NS}}}Relationship")
+        rel.set("Id", rid)
+        rel.set("Type", _FONT_REL_TYPE)
+        rel.set("Target", target)
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
+def _inject_embedded_font_list(
+    presentation_raw: bytes,
+    embed_entries: Sequence[Tuple[str, str, str]],
+) -> Optional[bytes]:
+    """Set embedTrueTypeFonts and insert <p:embeddedFontLst> into presentation.xml."""
+    for prefix, uri in PPT_NS.items():
+        ET.register_namespace(prefix, uri)
+    root = ET.fromstring(presentation_raw)
+    root.set("embedTrueTypeFonts", "1")
+
+    p_uri = PPT_NS["p"]
+    r_uri = PPT_NS["r"]
+    font_lst = ET.Element(f"{{{p_uri}}}embeddedFontLst")
+    for family, rid, _target in embed_entries:
+        embedded = ET.SubElement(font_lst, f"{{{p_uri}}}embeddedFont")
+        font = ET.SubElement(embedded, f"{{{p_uri}}}font")
+        font.set("typeface", family)
+        # We embed a single face per family covering the remapped runs; expose it
+        # via the regular slot. PowerPoint synthesizes bold/italic from it, which
+        # is the safest minimal-and-valid form (no dangling slot references).
+        regular = ET.SubElement(embedded, f"{{{p_uri}}}regular")
+        regular.set(f"{{{r_uri}}}id", rid)
+
+    # Insert in the schema-defined position within CT_Presentation.
+    insert_at = len(list(root))
+    order_index = _PRESENTATION_CHILD_ORDER.index("embeddedFontLst")
+    later_tags = {
+        f"{{{p_uri}}}{tag}" for tag in _PRESENTATION_CHILD_ORDER[order_index + 1:]
+    }
+    for index, child in enumerate(list(root)):
+        if child.tag in later_tags:
+            insert_at = index
+            break
+    root.insert(insert_at, font_lst)
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
 def replace_fonts_in_pptx(
     pptx_path: str,
     font_mapping: Dict[str, str],
@@ -1392,6 +1943,11 @@ def replace_fonts_in_pptx(
 ) -> None:
     """
     Replace fonts in a PPTX file using python-pptx.
+
+    After rewriting the font references, this also best-effort embeds the local
+    TrueType files for the substitute (CJK) families so the deck keeps rendering
+    correctly on machines that lack those fonts. The embedding step is fully
+    defensive: any failure leaves the rename-only output untouched.
 
     Args:
         pptx_path: Path to input PPTX file
@@ -1402,52 +1958,56 @@ def replace_fonts_in_pptx(
         _replace_fonts_in_pptx_xml(
             pptx_path, font_mapping, output_path, font_variant_mapping
         )
-        return
-
-    if font_mapping:
+    elif font_mapping:
         _replace_fonts_in_pptx_xml(pptx_path, font_mapping, output_path)
-        return
+    else:
+        prs = Presentation(pptx_path)
 
-    prs = Presentation(pptx_path)
+        # Iterate through all slides
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if hasattr(shape, "text_frame"):
+                    for paragraph in shape.text_frame.paragraphs:
+                        for run in paragraph.runs:
+                            if run.font.name and run.font.name in font_mapping:
+                                run.font.name = font_mapping[run.font.name]
 
-    # Iterate through all slides
-    for slide in prs.slides:
-        for shape in slide.shapes:
-            if hasattr(shape, "text_frame"):
-                for paragraph in shape.text_frame.paragraphs:
-                    for run in paragraph.runs:
-                        if run.font.name and run.font.name in font_mapping:
-                            run.font.name = font_mapping[run.font.name]
+                # Handle tables safely (python-pptx raises ValueError if non-table)
+                if getattr(shape, "has_table", False):
+                    for row in shape.table.rows:
+                        for cell in row.cells:
+                            for paragraph in cell.text_frame.paragraphs:
+                                for run in paragraph.runs:
+                                    if run.font.name and run.font.name in font_mapping:
+                                        run.font.name = font_mapping[run.font.name]
 
-            # Handle tables safely (python-pptx raises ValueError if non-table)
-            if getattr(shape, "has_table", False):
-                for row in shape.table.rows:
-                    for cell in row.cells:
-                        for paragraph in cell.text_frame.paragraphs:
-                            for run in paragraph.runs:
-                                if run.font.name and run.font.name in font_mapping:
-                                    run.font.name = font_mapping[run.font.name]
+        # Update slide layouts
+        for slide_layout in prs.slide_layouts:
+            for shape in slide_layout.shapes:
+                if hasattr(shape, "text_frame"):
+                    for paragraph in shape.text_frame.paragraphs:
+                        for run in paragraph.runs:
+                            if run.font.name and run.font.name in font_mapping:
+                                run.font.name = font_mapping[run.font.name]
 
-    # Update slide layouts
-    for slide_layout in prs.slide_layouts:
-        for shape in slide_layout.shapes:
-            if hasattr(shape, "text_frame"):
-                for paragraph in shape.text_frame.paragraphs:
-                    for run in paragraph.runs:
-                        if run.font.name and run.font.name in font_mapping:
-                            run.font.name = font_mapping[run.font.name]
+        # Update slide masters
+        for slide_master in prs.slide_masters:
+            for shape in slide_master.shapes:
+                if hasattr(shape, "text_frame"):
+                    for paragraph in shape.text_frame.paragraphs:
+                        for run in paragraph.runs:
+                            if run.font.name and run.font.name in font_mapping:
+                                run.font.name = font_mapping[run.font.name]
 
-    # Update slide masters
-    for slide_master in prs.slide_masters:
-        for shape in slide_master.shapes:
-            if hasattr(shape, "text_frame"):
-                for paragraph in shape.text_frame.paragraphs:
-                    for run in paragraph.runs:
-                        if run.font.name and run.font.name in font_mapping:
-                            run.font.name = font_mapping[run.font.name]
+        # Save the modified presentation
+        prs.save(output_path)
 
-    # Save the modified presentation
-    prs.save(output_path)
+    # Best-effort: embed the substitute CJK font files so the deck survives being
+    # opened on a machine without them. Never lets a failure break the export.
+    try:
+        _embed_fonts_in_pptx(output_path, font_mapping, font_variant_mapping)
+    except Exception:
+        pass
 
 
 async def install_fonts_for_libreoffice(font_paths: List[str], temp_dir: str) -> str:
@@ -1811,6 +2371,49 @@ _WEIGHT_KEYWORDS = {
 
 _STYLE_KEYWORDS = ("italic", "oblique")
 
+# Chinese weight words mapped to the canonical weight keys above. Ordered
+# longest-first so compound words ("超粗"/"中黑") win over single chars ("粗").
+#
+# NOTE: a bare "黑"/"中"/"重" is intentionally NOT a weight word here — "黑" is the
+# Hei typeface category ("微软雅黑", "黑体"), not a bold indicator, so treating it as
+# a weight would mis-flag regular-weight families as bold. Compounds like "中黑"
+# (a genuine semibold cut) are still recognised.
+_CJK_WEIGHT_KEYWORDS: Tuple[Tuple[str, str], ...] = (
+    ("极细", "thin"),
+    ("纤细", "thin"),
+    ("超细", "thin"),
+    ("特细", "extra_light"),
+    ("细体", "light"),
+    ("中黑", "semibold"),
+    ("超粗", "extra_bold"),
+    ("特粗", "extra_bold"),
+    ("极粗", "black"),
+    ("粗体", "bold"),
+    ("中等", "medium"),
+    ("标准", "regular"),
+    ("常规", "regular"),
+    ("普通", "regular"),
+    ("纤", "thin"),
+    ("细", "light"),
+    ("粗", "bold"),
+)
+
+
+def _extract_cjk_weight_from_name(value: Optional[str]) -> Optional[str]:
+    """Map a trailing Chinese weight word to a canonical weight key, else None."""
+    if not value:
+        return None
+    text = value.strip()
+    if not _contains_cjk(text):
+        return None
+    for token, canonical in _CJK_WEIGHT_KEYWORDS:
+        # Require the weight word to be a real suffix on a longer family name so a
+        # standalone "黑"/"中" never gets misread as a weight on its own.
+        if len(text) > len(token) and text.endswith(token):
+            return canonical
+    return None
+
+
 _WEIGHT_CLASS_BUCKETS = (
     ("thin", 0, 149),
     ("extra_light", 150, 249),
@@ -1880,18 +2483,19 @@ def _family_key(value: Optional[str]) -> str:
 
 def _extract_weight_from_name(value: Optional[str]) -> Optional[str]:
     normalized = _normalize_text(value)
-    if not normalized:
-        return None
-    compact = _normalize_compact(value)
-    padded = f" {normalized} "
-    for phrase_norm, phrase_compact, canonical in _get_weight_keyword_index():
-        if not phrase_norm:
-            continue
-        if f" {phrase_norm} " in padded:
-            return canonical
-        if phrase_compact and phrase_compact in compact:
-            return canonical
-    return None
+    if normalized:
+        compact = _normalize_compact(value)
+        padded = f" {normalized} "
+        for phrase_norm, phrase_compact, canonical in _get_weight_keyword_index():
+            if not phrase_norm:
+                continue
+            if f" {phrase_norm} " in padded:
+                return canonical
+            if phrase_compact and phrase_compact in compact:
+                return canonical
+    # Fall back to Chinese weight words ("微软雅黑-粗", "思源黑体细"), which the
+    # Latin-only normalization above strips away entirely.
+    return _extract_cjk_weight_from_name(value)
 
 
 def _weight_from_class(weight_class: Optional[int]) -> Optional[str]:

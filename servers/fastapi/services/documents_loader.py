@@ -31,6 +31,22 @@ except Exception:
 
 LOGGER = logging.getLogger(__name__)
 
+# If more than this fraction of extracted characters are U+FFFD (the Unicode
+# replacement character), the PDF text is likely garbled — commonly a CJK font
+# with no embedded ToUnicode map. We warn so the failure is diagnosable.
+_REPLACEMENT_CHAR = "�"
+_GARBLE_RATIO_THRESHOLD = 0.05
+
+
+def _replacement_char_ratio(text: str) -> float:
+    """Fraction of characters in ``text`` that are the U+FFFD replacement char."""
+    if not text:
+        return 0.0
+    replacement_count = text.count(_REPLACEMENT_CHAR)
+    if replacement_count == 0:
+        return 0.0
+    return replacement_count / len(text)
+
 
 def _unwrap_liteparse_json_line_if_stored(text: str) -> str:
     """If the whole JSON line from the LiteParse runner was stored as the document, keep only the text field."""
@@ -252,6 +268,29 @@ class DocumentsLoader:
         if load_text:
             document = await asyncio.to_thread(self._parse_with_liteparse, file_path)
 
+            # Detect garbled extraction (e.g. CJK PDF with no ToUnicode map).
+            # LiteParse already runs with OCR enabled, so there is no further
+            # non-OCR path to fall back from here — surface a warning so the
+            # condition is diagnosable instead of producing silent gibberish.
+            try:
+                garble_ratio = _replacement_char_ratio(document)
+                if garble_ratio > _GARBLE_RATIO_THRESHOLD:
+                    LOGGER.warning(
+                        "[DocumentsLoader] PDF text looks garbled file=%s "
+                        "replacement_char_ratio=%.3f (>%.2f); likely a CJK font "
+                        "without a ToUnicode map. OCR was already attempted.",
+                        file_path,
+                        garble_ratio,
+                        _GARBLE_RATIO_THRESHOLD,
+                    )
+            except Exception:
+                # Diagnostics must never break the parse pipeline.
+                LOGGER.debug(
+                    "[DocumentsLoader] garble-ratio check skipped file=%s",
+                    file_path,
+                    exc_info=True,
+                )
+
         if load_images:
             if temp_dir is None:
                 raise HTTPException(
@@ -263,7 +302,9 @@ class DocumentsLoader:
         return document, image_paths
 
     async def load_text(self, file_path: str) -> str:
-        with open(file_path, "r", encoding="utf-8") as file:
+        # errors="replace" mirrors the LiteParse path so a mixed/invalid-encoding
+        # .txt yields recoverable text instead of a UnicodeDecodeError -> 500.
+        with open(file_path, "r", encoding="utf-8", errors="replace") as file:
             return await asyncio.to_thread(file.read)
 
     def load_office_document(self, file_path: str, temp_dir: Optional[str] = None) -> str:

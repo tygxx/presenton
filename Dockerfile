@@ -13,20 +13,23 @@ RUN python -m venv --without-pip /opt/venv \
 COPY servers/fastapi/pyproject.toml servers/fastapi/uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv export --frozen --no-dev --no-emit-project -o /tmp/requirements.txt \
-    && uv pip install --python /opt/venv/bin/python -r /tmp/requirements.txt
+    && uv pip install --python /opt/venv/bin/python --index-url https://mirrors.aliyun.com/pypi/simple/ -r /tmp/requirements.txt
 
 COPY servers/fastapi /app/servers/fastapi
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --python /opt/venv/bin/python --no-deps .
+    uv pip install --python /opt/venv/bin/python --index-url https://mirrors.aliyun.com/pypi/simple/ --no-deps .
 # mem0/spaCy BM25 lemmatization loads en_core_web_sm at runtime; spaCy tries pip to
 # download it otherwise. Runtime image has no pip in PATH (--without-pip venv).
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --python /opt/venv/bin/python \
-    "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
+    uv pip install --python /opt/venv/bin/python --index-url https://mirrors.aliyun.com/pypi/simple/ \
+    "https://ghfast.top/https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
 ENV HF_HOME=/root/.cache/huggingface \
     PRESENTON_FASTEMBED_ICON_CACHE_DIR=/root/.cache/presenton/fastembed-icons
 # Warm FastEmbed caches into the image (not a BuildKit cache mount, or HF weights would be missing).
-RUN /opt/venv/bin/python scripts/warm_fastembed_cache.py
+ENV HF_HUB_DOWNLOAD_TIMEOUT=120 HF_HUB_ETAG_TIMEOUT=120
+ENV HF_ENDPOINT=https://hf-mirror.com
+RUN i=0; until /opt/venv/bin/python scripts/warm_fastembed_cache.py; do i=$((i+1)); [ $i -ge 6 ] && { echo "[warm] failed after $i attempts"; exit 1; }; echo "[warm] retry $i in 8s"; sleep 8; done
+RUN mkdir -p /root/.cache/huggingface
 
 
 FROM node:20-bookworm-slim AS nextjs-builder
@@ -45,6 +48,8 @@ RUN npm run build \
 
 
 FROM node:20-bookworm-slim AS assets-builder
+
+RUN sed -i 's|http://deb.debian.org|http://mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources
 
 WORKDIR /app
 
@@ -70,6 +75,9 @@ RUN rm -rf /app/presentation-export \
 
 
 FROM python:3.11-slim-trixie AS runtime
+ENV HF_ENDPOINT=https://hf-mirror.com
+
+RUN sed -i 's|http://deb.debian.org|http://mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources
 
 WORKDIR /app
 
@@ -92,14 +100,14 @@ ENV APP_DATA_DIRECTORY=/app_data \
 
 RUN set -eux; \
     packages="ca-certificates curl nginx fontconfig imagemagick zstd chromium \
-      fonts-liberation xdg-utils \
+      fonts-liberation fonts-noto-cjk xdg-utils \
       libasound2t64 libatk-bridge2.0-0t64 libatk1.0-0t64 libatspi2.0-0t64 \
       libcairo2 libcups2t64 libdbus-1-3 libdrm2 libexpat1 libgbm1 \
       libglib2.0-0t64 libgtk-3-0t64 libnspr4 libnss3 libpango-1.0-0 \
       libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 \
       libxkbcommon0 libxrandr2 libxshmfence1 libxss1 libxtst6"; \
     if [ "$INSTALL_LIBREOFFICE" = "true" ]; then packages="$packages libreoffice"; fi; \
-    if [ "$INSTALL_TESSERACT" = "true" ]; then packages="$packages tesseract-ocr tesseract-ocr-eng"; fi; \
+    if [ "$INSTALL_TESSERACT" = "true" ]; then packages="$packages tesseract-ocr tesseract-ocr-eng tesseract-ocr-chi-sim tesseract-ocr-chi-tra"; fi; \
     apt-get update; \
     apt-get install -y --no-install-recommends $packages; \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; \

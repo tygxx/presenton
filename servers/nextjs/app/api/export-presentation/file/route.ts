@@ -34,7 +34,9 @@ function getSafeExportName(request: NextRequest): string | null {
 }
 
 function contentDisposition(filename: string): string {
-  const fallback = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+  // ASCII fallback 文件名：保留字母数字、常见标点，以及中文字符与中文括号，
+  // 避免把中文文件名整段替换成下划线（现代浏览器优先使用下方的 filename* UTF-8 值）。
+  const fallback = filename.replace(/[^\w.\-一-鿿（）()]+/g, "_");
   return `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
 }
 

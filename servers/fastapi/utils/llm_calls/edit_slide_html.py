@@ -36,10 +36,61 @@ system_prompt = """
 """
 
 
-def get_user_prompt(prompt: str, html: str, memory_context: Optional[str] = None):
+def _has_cjk(text: Optional[str]) -> bool:
+    """Lightweight heuristic: True if text contains a meaningful share of CJK characters."""
+    if not text:
+        return False
+    cjk = 0
+    total = 0
+    for ch in str(text):
+        if ch.isspace():
+            continue
+        total += 1
+        code = ord(ch)
+        if (
+            0x4E00 <= code <= 0x9FFF
+            or 0x3000 <= code <= 0x303F
+            or 0xFF00 <= code <= 0xFFEF
+        ):
+            cjk += 1
+    if total == 0:
+        return False
+    return (cjk / total) >= 0.15
+
+
+def _resolve_content_language(
+    language: Optional[str], content: Optional[str] = None
+) -> Optional[str]:
+    """Resolve the slide's content language for the edit prompt.
+
+    Returns an explicit language string, or None when it can't be determined
+    (in which case no language directive is added and behaviour is unchanged).
+    """
+    s = "" if language is None else str(language).strip()
+    if s and s.lower() not in {"auto", "auto-detect"}:
+        return s
+    if _has_cjk(content):
+        return "Chinese (Simplified) / 简体中文"
+    return None
+
+
+def get_user_prompt(
+    prompt: str,
+    html: str,
+    memory_context: Optional[str] = None,
+    language: Optional[str] = None,
+):
     memory_block = (
         f"\n        **Retrieved Presentation Memory Context:**\n        {memory_context}\n"
         if memory_context
+        else ""
+    )
+
+    content_language = _resolve_content_language(language, html)
+    language_block = (
+        f"\n        **Content Language:** {content_language}. Keep all visible text in this "
+        "language; do not translate existing content to English unless the edit request explicitly asks for it.\n"
+        if content_language
         else ""
     )
 
@@ -47,7 +98,7 @@ def get_user_prompt(prompt: str, html: str, memory_context: Optional[str] = None
         Please edit the following slide HTML based on this prompt:
 
         **Edit Request:** {prompt}
-        {memory_block}
+        {language_block}{memory_block}
 
         **Current HTML:**
         ```html
@@ -59,7 +110,10 @@ def get_user_prompt(prompt: str, html: str, memory_context: Optional[str] = None
 
 
 async def get_edited_slide_html(
-    prompt: str, html: str, memory_context: Optional[str] = None
+    prompt: str,
+    html: str,
+    memory_context: Optional[str] = None,
+    language: Optional[str] = None,
 ):
     model = get_model()
 
@@ -72,7 +126,7 @@ async def get_edited_slide_html(
                 messages=[
                     SystemMessage(content=system_prompt),
                     UserMessage(
-                        content=get_user_prompt(prompt, html, memory_context)
+                        content=get_user_prompt(prompt, html, memory_context, language)
                     ),
                 ],
             ),

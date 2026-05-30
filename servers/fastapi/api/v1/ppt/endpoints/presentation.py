@@ -345,6 +345,7 @@ async def prepare_presentation(
                 outline=presentation_outline_model,
                 n_toc_slides=n_toc_slides,
                 title_slide=presentation.include_title_slide,
+                language=presentation.language or None,
             )
 
     sql_session.add(presentation)
@@ -837,6 +838,7 @@ async def generate_presentation_handler(
                     outline=presentation_outlines,
                     n_toc_slides=n_toc_slides,
                     title_slide=request.include_title_slide,
+                    language=language_to_use,
                 )
 
         final_n_slides = request.n_slides

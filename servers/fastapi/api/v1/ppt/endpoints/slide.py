@@ -115,6 +115,7 @@ async def edit_slide_html(
         prompt,
         html_to_edit,
         memory_context,
+        presentation.language or None,
     )
 
     # Always assign a new unique id to the slide

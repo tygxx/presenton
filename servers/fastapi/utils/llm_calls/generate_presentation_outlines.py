@@ -85,6 +85,8 @@ def get_system_prompt(
         "Only include URLs if they appear in the provided content/context.\n"
         "Make sure data used is strictly from the provided content/context.\n"
         "Make sure data is consistent across all slides."
+        "Write the presentation title and every slide's content in the **Language** specified in the user message; "
+        "do not translate the output to English when another language is requested.\n"
         "Use the web search tool when the user request requires current, factual, or external information.\n"
         "If the answer may be outdated or uncertain, prefer using the web search tool.\n"
     )
@@ -92,15 +94,40 @@ def get_system_prompt(
     return system
 
 
-def _resolve_prompt_language(language: Optional[str]) -> str:
-    if language is None:
-        return "auto-detect"
-    s = str(language).strip()
-    if not s:
-        return "auto-detect"
-    if s.lower() in {"auto", "auto-detect"}:
-        return "auto-detect"
-    return s
+def _has_cjk(text: Optional[str]) -> bool:
+    """Lightweight heuristic: True if text contains a meaningful share of CJK characters."""
+    if not text:
+        return False
+    cjk = 0
+    total = 0
+    for ch in str(text):
+        if ch.isspace():
+            continue
+        total += 1
+        code = ord(ch)
+        if (
+            0x4E00 <= code <= 0x9FFF
+            or 0x3000 <= code <= 0x303F
+            or 0xFF00 <= code <= 0xFFEF
+        ):
+            cjk += 1
+    if total == 0:
+        return False
+    return (cjk / total) >= 0.15
+
+
+def _resolve_prompt_language(
+    language: Optional[str], content: Optional[str] = None
+) -> str:
+    s = "" if language is None else str(language).strip()
+    if s and s.lower() not in {"auto", "auto-detect"}:
+        return s
+    # No explicit language: infer it from the content rather than leaving it to
+    # the model. Declaring the target language explicitly stops CJK input from
+    # drifting into English output.
+    if _has_cjk(content):
+        return "Chinese (Simplified) — write all titles and slide content in 简体中文"
+    return "auto-detect"
 
 
 def _resolve_prompt_n_slides(n_slides: Optional[int]) -> str:
@@ -119,13 +146,13 @@ def get_user_prompt(
     include_title_slide: bool = True,
     include_table_of_contents: bool = False,
 ):
-    display_language = _resolve_prompt_language(language)
+    display_language = _resolve_prompt_language(language, content)
     display_slides = _resolve_prompt_n_slides(n_slides)
     toc_text = f"Include Table Of Contents: {str(include_table_of_contents).lower()}\n"
     return (
         f"Content: {content or ''}\n"
         f"Number of Slides: {display_slides}\n"
-        f"Language: {display_language}\n"
+        f"Language: {display_language} (write the presentation title and all slide content in this language)\n"
         f"Tone: {tone or ''}\n"
         f"Today's Date: {datetime.now().strftime('%Y-%m-%d')}\n"
         f"Include Title Slide: {include_title_slide}\n"

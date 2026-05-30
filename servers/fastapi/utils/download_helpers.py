@@ -1,12 +1,60 @@
 import asyncio
 import os
 import mimetypes
+import re
 from typing import List, Optional
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import aiohttp
 
 import uuid
+
+
+def _filename_from_content_disposition(content_disposition: str) -> Optional[str]:
+    """Extract a filename from a Content-Disposition header value.
+
+    Prefers the RFC 5987 ``filename*=charset'lang'<pct-encoded>`` form (used by
+    servers to carry non-ASCII / Chinese names) and percent-decodes it with the
+    declared charset, falling back to plain ``filename="..."``. Defensive: any
+    parsing problem falls back to ``None`` so the caller keeps its prior
+    behavior instead of raising.
+    """
+    if not content_disposition:
+        return None
+
+    try:
+        # RFC 5987 extended form takes precedence: filename*=UTF-8''%E4%B8%AD.pdf
+        ext_match = re.search(
+            r"filename\*\s*=\s*([^']*)'[^']*'([^;]+)",
+            content_disposition,
+            re.IGNORECASE,
+        )
+        if ext_match:
+            charset = (ext_match.group(1) or "utf-8").strip() or "utf-8"
+            raw_value = ext_match.group(2).strip().strip("\"'")
+            try:
+                decoded = unquote(raw_value, encoding=charset, errors="replace")
+            except (LookupError, ValueError):
+                decoded = unquote(raw_value, encoding="utf-8", errors="replace")
+            decoded = decoded.strip()
+            if decoded:
+                return decoded
+
+        # Plain form: filename="中文.pdf" or filename=foo.pdf
+        plain_match = re.search(
+            r'filename\s*=\s*"([^"]*)"|filename\s*=\s*([^;]+)',
+            content_disposition,
+            re.IGNORECASE,
+        )
+        if plain_match:
+            value = (plain_match.group(1) or plain_match.group(2) or "").strip()
+            value = value.strip("\"'")
+            if value:
+                return value
+    except Exception:
+        return None
+
+    return None
 
 
 async def download_file(
@@ -25,10 +73,11 @@ async def download_file(
                         content_disposition = response.headers.get(
                             "Content-Disposition", ""
                         )
-                        if "filename=" in content_disposition:
-                            filename = content_disposition.split("filename=")[1].strip(
-                                "\"'"
-                            )
+                        parsed_name = _filename_from_content_disposition(
+                            content_disposition
+                        )
+                        if parsed_name:
+                            filename = parsed_name
                         else:
                             content_type = response.headers.get("Content-Type", "")
                             if content_type:
@@ -38,6 +87,9 @@ async def download_file(
                                 if extension:
                                     filename = f"{uuid.uuid4()}{extension}"
 
+        # A server-supplied filename must never escape save_directory; keep only
+        # the basename so "../" or absolute paths can't redirect the write.
+        filename = os.path.basename(filename or "")
         filename = filename or str(uuid.uuid4())
         save_path = os.path.join(save_directory, filename)
 
