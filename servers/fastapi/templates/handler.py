@@ -153,9 +153,25 @@ class CloneSlideLayoutRequest(BaseModel):
     layout_name: Optional[str] = None
 
 
+_THINK_BLOCK_RE = re.compile(r"<think\b[^>]*>.*?</think>", re.DOTALL | re.IGNORECASE)
+_TSX_CODE_START_RE = re.compile(
+    r"(?m)^\s*(?:import\b|export\b|const\s+Schema\b|const\s+dynamicSlideLayout\b)"
+)
+
+
 def _strip_code_fences(value: str) -> str:
+    # Reasoning models (gpt-5.x and similar via OpenAI-compatible gateways) can
+    # emit a <think>...</think> chain-of-thought before the TSX, which then fails
+    # to compile ("Unterminated JSX contents" on the leading <think>). Drop closed
+    # think blocks; if an unterminated one remains (e.g. truncated reasoning), cut
+    # forward to the first real TSX token. Mirrors the outline parser's handling.
+    text = _THINK_BLOCK_RE.sub("", value)
+    if "<think" in text.lower():
+        code_start = _TSX_CODE_START_RE.search(text)
+        if code_start:
+            text = text[code_start.start() :]
     return (
-        value.replace("```tsx", "")
+        text.replace("```tsx", "")
         .replace("```typescript", "")
         .replace("```ts", "")
         .replace("```", "")
