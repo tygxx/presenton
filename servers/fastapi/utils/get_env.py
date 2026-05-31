@@ -34,6 +34,16 @@ def get_temp_directory_env():
     return os.getenv("TEMP_DIRECTORY")
 
 
+def get_template_max_slides_env() -> int:
+    """上传 PPTX 转模板时解析的最大页数（逐页截图→版式）。默认 60，可用 TEMPLATE_MAX_SLIDES 覆盖。"""
+    raw = os.getenv("TEMPLATE_MAX_SLIDES")
+    try:
+        value = int(str(raw).strip())
+    except (TypeError, ValueError):
+        return 60
+    return value if value > 0 else 60
+
+
 def get_user_config_path_env():
     return os.getenv("USER_CONFIG_PATH")
 

@@ -41,6 +41,7 @@ from utils.asset_directory_utils import (
     resolve_app_path_to_filesystem,
     resolve_image_path_to_filesystem,
 )
+from utils.get_env import get_template_max_slides_env
 
 
 class TemplateDetail(BaseModel):
@@ -495,7 +496,7 @@ async def upload_fonts_and_slides_preview(
         pptx_file=pptx_file,
         font_files=font_files,
         original_font_names=original_font_names,
-        max_slides=25,
+        max_slides=get_template_max_slides_env(),
     )
 
 

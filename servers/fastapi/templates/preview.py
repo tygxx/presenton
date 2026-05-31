@@ -16,6 +16,7 @@ from templates.fonts_and_slides_preview import (
     check_fonts_in_pptx_handler as _check_fonts_in_pptx_handler,
     upload_fonts_and_preview_handler,
 )
+from utils.get_env import get_template_max_slides_env
 
 __all__ = [
     "FontInfo",
@@ -42,5 +43,5 @@ async def upload_fonts_and_slides_preview_handler(
         pptx_file=pptx_file,
         font_files=font_files,
         original_font_names=original_font_names,
-        max_slides=max_slides or 25,
+        max_slides=max_slides or get_template_max_slides_env(),
     )
