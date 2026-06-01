@@ -32,7 +32,7 @@ class TestPresentationGenerationAPI:
             n_slides=5,
             language="English",
             export_as="pdf",
-            template="general",
+            template="business-cn",
         )
         response_payload = PresentationPathAndEditPath(
             presentation_id=uuid.uuid4(),
@@ -57,7 +57,7 @@ class TestPresentationGenerationAPI:
             n_slides=5,
             language="English",
             export_as="pptx",
-            template="general",
+            template="business-cn",
         )
         response_payload = PresentationPathAndEditPath(
             presentation_id=uuid.uuid4(),
@@ -83,7 +83,7 @@ class TestPresentationGenerationAPI:
                     "n_slides": 5,
                     "language": "English",
                     "export_as": "pdf",
-                    "template": "general",
+                    "template": "business-cn",
                 }
             )
 
@@ -93,7 +93,7 @@ class TestPresentationGenerationAPI:
             n_slides=0,
             language="English",
             export_as="pdf",
-            template="general",
+            template="business-cn",
         )
 
         with pytest.raises(HTTPException) as exc:
@@ -112,6 +112,6 @@ class TestPresentationGenerationAPI:
                     "n_slides": 5,
                     "language": "English",
                     "export_as": "invalid_type",
-                    "template": "general",
+                    "template": "business-cn",
                 }
             )
