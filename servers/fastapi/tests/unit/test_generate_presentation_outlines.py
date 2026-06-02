@@ -38,6 +38,15 @@ def test_get_user_prompt_uses_autodetect_defaults():
     assert "Context: None" in prompt
 
 
+def test_get_system_prompt_autodetect_prefers_fuller_deck():
+    system = outline_module.get_system_prompt()
+    # When slide count is auto-detected the model must aim for a thorough deck,
+    # not the sparse ~6-slide default it produces for short prompts.
+    assert "auto-detect" in system
+    assert "prefer a thorough" in system
+    assert "fewer than 8 slides" in system
+
+
 def test_generate_ppt_outline_streams_json_chunks_and_keeps_schema_shape():
     async def fake_stream_generate_events(_client, **_kwargs):
         yield content_event('{"slides": [')
