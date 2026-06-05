@@ -67,9 +67,9 @@ async def edit_slide(
         icon_weight=presentation.get_layout().icon_weight,
     )
 
-    # Always assign a new unique id to the slide
-    slide.id = uuid.uuid4()
-
+    # Keep the slide's primary key stable across edits; only its content changes.
+    # Rotating the id would make the old id single-use and 404 any caller still
+    # holding it (a replayed request, an undo snapshot).
     sql_session.add(slide)
     slide.content = edited_slide_content
     slide.layout = slide_layout.id
@@ -118,10 +118,7 @@ async def edit_slide_html(
         presentation.language or None,
     )
 
-    # Always assign a new unique id to the slide
-    # This is to ensure that the nextjs can track slide updates
-    slide.id = uuid.uuid4()
-
+    # Keep the slide's primary key stable across edits (see edit_slide above).
     sql_session.add(slide)
     slide.html_content = edited_slide_html
     await sql_session.commit()

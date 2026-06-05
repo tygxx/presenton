@@ -519,7 +519,8 @@ class PresentationChatMemoryLayer:
                 icon_weight=icon_weight,
             )
 
-            existing_slide.id = uuid.uuid4()
+            # Keep the slide's primary key stable when replacing its content,
+            # so callers holding the previous id don't get a stale-id 404.
             existing_slide.layout = layout_id
             existing_slide.layout_group = self._resolve_layout_group(
                 presentation=presentation,
