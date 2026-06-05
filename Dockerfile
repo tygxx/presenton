@@ -53,6 +53,11 @@ RUN sed -i 's|http://deb.debian.org|http://mirrors.aliyun.com|g' /etc/apt/source
 
 WORKDIR /app
 
+# China mirror for npm: sharp/@img native libvips binaries (and liteparse) are large
+# and painfully slow from the default registry in CN (metadata alone ~13s, multi-MB
+# tarballs effectively stall). npmmirror serves the same packages ~8x faster.
+ENV npm_config_registry=https://registry.npmmirror.com
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates unzip \
     && rm -rf /var/lib/apt/lists/*
