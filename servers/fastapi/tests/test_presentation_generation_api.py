@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -9,6 +10,13 @@ from pydantic import ValidationError
 from api.v1.ppt.endpoints.presentation import generate_presentation_sync
 from models.generate_presentation_request import GeneratePresentationRequest
 from models.presentation_and_path import PresentationPathAndEditPath
+
+
+def _fake_http_request():
+    # generate_presentation_sync derives an export cookie header from the request.
+    # _build_export_cookie_header / get_session_token_from_request read headers,
+    # cookies and state — empty containers exercise the no-auth path.
+    return SimpleNamespace(headers={}, cookies={}, state=SimpleNamespace())
 
 
 class FakeAsyncSession:
@@ -45,7 +53,9 @@ class TestPresentationGenerationAPI:
             new=AsyncMock(return_value=response_payload),
         ) as mock_handler:
             response = asyncio.run(
-                generate_presentation_sync(request, sql_session=FakeAsyncSession())
+                generate_presentation_sync(
+                    _fake_http_request(), request, sql_session=FakeAsyncSession()
+                )
             )
 
         assert response == response_payload
@@ -70,7 +80,9 @@ class TestPresentationGenerationAPI:
             new=AsyncMock(return_value=response_payload),
         ) as mock_handler:
             response = asyncio.run(
-                generate_presentation_sync(request, sql_session=FakeAsyncSession())
+                generate_presentation_sync(
+                    _fake_http_request(), request, sql_session=FakeAsyncSession()
+                )
             )
 
         assert response == response_payload
@@ -98,7 +110,9 @@ class TestPresentationGenerationAPI:
 
         with pytest.raises(HTTPException) as exc:
             asyncio.run(
-                generate_presentation_sync(request, sql_session=FakeAsyncSession())
+                generate_presentation_sync(
+                    _fake_http_request(), request, sql_session=FakeAsyncSession()
+                )
             )
 
         assert exc.value.status_code == 400

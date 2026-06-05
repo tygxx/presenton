@@ -135,7 +135,7 @@ def test_generate_slide_layout_code_uses_llmai_for_all_supported_providers(
 
     call_kwargs = dummy_client.calls[0]
     assert call_kwargs["model"] == f"{provider.value}-model"
-    assert call_kwargs["max_tokens"] == 8192
+    assert call_kwargs["max_tokens"] == 16384
     messages = call_kwargs["messages"]
     assert len(messages) == 2
     assert messages[0].role == "system"

@@ -179,6 +179,7 @@ def test_generate_presentation_sync_rejects_invalid_slide_count(fake_async_sessi
     with pytest.raises(HTTPException) as exc:
         _run(
             presentation_endpoint.generate_presentation_sync(
+                request_http=None,  # unused: invalid slide count raises before it is read
                 request=request,
                 sql_session=fake_async_session,
             )
