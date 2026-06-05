@@ -266,7 +266,9 @@ class DocumentsLoader:
         document: str = ""
 
         if load_text:
-            document = await asyncio.to_thread(self._parse_with_liteparse, file_path)
+            is_scanned = await asyncio.to_thread(self._is_scanned_pdf, file_path)
+            dpi = 300 if is_scanned else None
+            document = await asyncio.to_thread(self._parse_with_liteparse, file_path, dpi)
 
             # Detect garbled extraction (e.g. CJK PDF with no ToUnicode map).
             # LiteParse already runs with OCR enabled, so there is no further
@@ -301,6 +303,19 @@ class DocumentsLoader:
 
         return document, image_paths
 
+    @staticmethod
+    def _is_scanned_pdf(file_path: str, sample_pages: int = 5, threshold: int = 50) -> bool:
+        """Check if a PDF is scanned (image-only) by sampling pages for text content."""
+        try:
+            with pdfplumber.open(file_path) as pdf:
+                total_chars = 0
+                for i, page in enumerate(pdf.pages[:sample_pages]):
+                    text = page.extract_text() or ""
+                    total_chars += len(text.strip())
+                return total_chars < threshold
+        except Exception:
+            return False
+
     async def load_text(self, file_path: str) -> str:
         # errors="replace" mirrors the LiteParse path so a mixed/invalid-encoding
         # .txt yields recoverable text instead of a UnicodeDecodeError -> 500.
@@ -314,7 +329,8 @@ class DocumentsLoader:
                 temp_dir,
                 timeout_seconds=self.DECOMPOSE_TIMEOUT_SECONDS,
             )
-            return self._parse_with_liteparse(converted_path)
+            is_scanned = self._is_scanned_pdf(converted_path)
+            return self._parse_with_liteparse(converted_path, dpi=300 if is_scanned else None)
 
         with tempfile.TemporaryDirectory(prefix="office-convert-") as conversion_dir:
             converted_path = self.document_conversion_service.convert_office_to_pdf(
@@ -322,7 +338,8 @@ class DocumentsLoader:
                 conversion_dir,
                 timeout_seconds=self.DECOMPOSE_TIMEOUT_SECONDS,
             )
-            return self._parse_with_liteparse(converted_path)
+            is_scanned = self._is_scanned_pdf(converted_path)
+            return self._parse_with_liteparse(converted_path, dpi=300 if is_scanned else None)
 
     def load_image(self, file_path: str, temp_dir: Optional[str] = None) -> str:
         if temp_dir:
@@ -331,7 +348,7 @@ class DocumentsLoader:
                 temp_dir,
                 timeout_seconds=self.DECOMPOSE_TIMEOUT_SECONDS,
             )
-            return self._parse_with_liteparse(converted_path)
+            return self._parse_with_liteparse(converted_path, dpi=300)
 
         with tempfile.TemporaryDirectory(prefix="image-convert-") as conversion_dir:
             converted_path = self.document_conversion_service.convert_image_to_png(
@@ -339,15 +356,16 @@ class DocumentsLoader:
                 conversion_dir,
                 timeout_seconds=self.DECOMPOSE_TIMEOUT_SECONDS,
             )
-            return self._parse_with_liteparse(converted_path)
+            return self._parse_with_liteparse(converted_path, dpi=300)
 
-    def _parse_with_liteparse(self, file_path: str) -> str:
+    def _parse_with_liteparse(self, file_path: str, dpi: int = None) -> str:
         try:
             LOGGER.info("[DocumentsLoader] LiteParse start file=%s", file_path)
             return self.liteparse_service.parse_to_markdown(
                 file_path,
                 ocr_enabled=True,
                 ocr_language=self._ocr_language,
+                dpi=dpi,
             )
         except (LiteParseError, DocumentConversionError) as exc:
             LOGGER.warning(
