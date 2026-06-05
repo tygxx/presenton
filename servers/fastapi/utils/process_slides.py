@@ -143,9 +143,11 @@ async def process_old_and_new_slides_and_fetch_assets(
     # Use old image url if prompt is same
     for new_image in new_image_dicts:
         if new_image["__image_prompt__"] in old_image_prompts:
-            old_image_url = old_image_dicts[
-                old_image_prompts.index(new_image["__image_prompt__"])
-            ].get("__image_url__")
+            old_image_url = normalize_slide_asset_url(
+                old_image_dicts[
+                    old_image_prompts.index(new_image["__image_prompt__"])
+                ].get("__image_url__")
+            )
             if old_image_url:
                 new_image["__image_url__"] = old_image_url
                 new_images_fetch_status.append(False)
@@ -164,9 +166,11 @@ async def process_old_and_new_slides_and_fetch_assets(
     # Use old icon url if query is same
     for new_icon in new_icon_dicts:
         if new_icon["__icon_query__"] in old_icon_queries:
-            old_icon_url = old_icon_dicts[
-                old_icon_queries.index(new_icon["__icon_query__"])
-            ].get("__icon_url__")
+            old_icon_url = normalize_slide_asset_url(
+                old_icon_dicts[
+                    old_icon_queries.index(new_icon["__icon_query__"])
+                ].get("__icon_url__")
+            )
             if old_icon_url:
                 new_icon["__icon_url__"] = old_icon_url
                 new_icons_fetch_status.append(False)

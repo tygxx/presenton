@@ -23,11 +23,30 @@ def absolute_fastapi_asset_url(path: str) -> str:
     return p
 
 
+_LOOPBACK_ASSET_HOSTS = {"127.0.0.1", "localhost", "0.0.0.0", "::1"}
+
+
+def _strip_loopback_asset_host(s: str) -> str:
+    """A loopback host on a FastAPI-served asset path (/static, /app_data) is never
+    reachable from the user's browser; reduce it to a same-origin relative path.
+    External media (e.g. https stock images) and non-loopback hosts are left as-is."""
+    if s.startswith(("http://", "https://")):
+        try:
+            parsed = urlparse(s)
+        except ValueError:
+            return s
+        if parsed.hostname in _LOOPBACK_ASSET_HOSTS and parsed.path.startswith(
+            ("/static/", "/app_data/")
+        ):
+            return f"{parsed.path}?{parsed.query}" if parsed.query else parsed.path
+    return s
+
+
 def normalize_slide_asset_url(path_or_url: str) -> str:
     """Slide JSON media URLs: keep https/data/blob; make /app_data and /static absolute when FastAPI base is set."""
     if not path_or_url or not isinstance(path_or_url, str):
         return path_or_url
-    s = path_or_url.strip()
+    s = _strip_loopback_asset_host(path_or_url.strip())
     if s.startswith(("http://", "https://", "data:", "blob:")):
         return s
     if s.startswith(("/app_data/", "/static/")):
