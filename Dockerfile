@@ -58,6 +58,12 @@ WORKDIR /app
 # tarballs effectively stall). npmmirror serves the same packages ~8x faster.
 ENV npm_config_registry=https://registry.npmmirror.com
 
+# Export runtime (presenton-export ~55MB GitHub release) is redirect-stalled from CN.
+# Pin the version (skip the rate-limited GitHub API for "latest") and fetch the asset
+# through a GitHub mirror (ghfast.top ~1.5MB/s vs near-0 direct).
+ENV EXPORT_RUNTIME_VERSION=v0.2.9
+ENV EXPORT_REPO_BASE=https://ghfast.top/https://github.com/presenton/presenton-export/releases/download
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates unzip \
     && rm -rf /var/lib/apt/lists/*

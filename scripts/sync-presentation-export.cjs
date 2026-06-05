@@ -26,6 +26,7 @@ const targetIndexCjs = path.join(targetRoot, "index.cjs");
 const packageJsonFile = path.join(repoRoot, "package.json");
 const cacheDir = path.join(repoRoot, ".cache", "presentation-export");
 const exportRepoBase =
+  (process.env.EXPORT_REPO_BASE || "").trim() ||
   "https://github.com/presenton/presenton-export/releases/download";
 
 function getPlatformAssetName() {
