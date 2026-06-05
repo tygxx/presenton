@@ -140,10 +140,7 @@ const TableOfContents: React.FC<{ data?: Partial<SlideData> }> = ({ data: slideD
                                     <span
                                         className="flex-shrink-0 text-4xl font-black leading-none"
                                         style={{
-                                            color: "transparent",
-                                            backgroundImage: "linear-gradient(135deg, var(--primary-color,#0ea5e9), var(--secondary-color,#10b981))",
-                                            WebkitBackgroundClip: "text",
-                                            backgroundClip: "text",
+                                            color: "var(--primary-color,#0ea5e9)",
                                         }}
                                     >
                                         {num}

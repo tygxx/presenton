@@ -121,10 +121,7 @@ const BarChart: React.FC<{ data?: Partial<SlideData> }> = ({ data: slideData }) 
                                         className="text-3xl font-black leading-none break-words"
                                         style={{
                                             fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
-                                            background: "linear-gradient(90deg, var(--primary-color,#3b82f6), var(--secondary-color,#8b5cf6))",
-                                            WebkitBackgroundClip: 'text',
-                                            backgroundClip: 'text',
-                                            color: 'transparent',
+                                            color: "var(--primary-color,#3b82f6)",
                                             overflowWrap: 'break-word', wordBreak: 'break-word',
                                         }}
                                     >

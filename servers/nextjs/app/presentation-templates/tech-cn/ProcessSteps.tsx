@@ -169,10 +169,7 @@ const ProcessSteps: React.FC<{ data?: Partial<SlideData> }> = ({ data: slideData
                                             <span
                                                 className="text-3xl font-black tabular-nums leading-none"
                                                 style={{
-                                                    color: "transparent",
-                                                    backgroundImage: "linear-gradient(135deg, var(--primary-color,#3b82f6), var(--secondary-color,#8b5cf6))",
-                                                    WebkitBackgroundClip: "text",
-                                                    backgroundClip: "text",
+                                                    color: "var(--primary-color,#3b82f6)",
                                                     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                                                 }}
                                             >

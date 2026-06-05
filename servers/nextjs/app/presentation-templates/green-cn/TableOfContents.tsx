@@ -154,10 +154,7 @@ const TableOfContents: React.FC<{ data?: Partial<SlideData> }> = ({ data: slideD
                                     <span
                                         className="flex-shrink-0 text-4xl font-black leading-none break-words"
                                         style={{
-                                            color: 'transparent',
-                                            backgroundImage: "linear-gradient(135deg, var(--primary-color,#16a34a), var(--secondary-color,#0891b2))",
-                                            backgroundClip: 'text',
-                                            WebkitBackgroundClip: 'text',
+                                            color: "var(--primary-color,#16a34a)",
                                             overflowWrap: 'break-word', wordBreak: 'break-word',
                                         }}
                                     >

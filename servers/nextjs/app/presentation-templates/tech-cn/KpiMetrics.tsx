@@ -212,11 +212,7 @@ const KpiMetrics: React.FC<{ data?: Partial<SlideData> }> = ({ data: slideData }
                                     <div
                                         className="text-6xl font-black leading-[1.05] break-words"
                                         style={{
-                                            backgroundImage: "linear-gradient(120deg,var(--primary-text,#ffffff),var(--primary-color,#3b82f6) 60%,var(--secondary-color,#8b5cf6))",
-                                            WebkitBackgroundClip: 'text',
-                                            backgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
-                                            color: 'transparent',
+                                            color: "var(--primary-text,#ffffff)",
                                             fontVariantNumeric: 'tabular-nums',
                                             overflowWrap: 'break-word',
                                             wordBreak: 'break-word',

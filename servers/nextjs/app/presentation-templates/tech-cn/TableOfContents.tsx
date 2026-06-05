@@ -154,10 +154,6 @@ const TableOfContents: React.FC<{ data?: Partial<SlideData> }> = ({ data: slideD
                                         className="flex-shrink-0 text-4xl font-black leading-none"
                                         style={{
                                             fontFamily: "var(--code-font-family,'JetBrains Mono','SF Mono',ui-monospace,monospace)",
-                                            background: "linear-gradient(135deg, var(--primary-color,#3b82f6) 0%, var(--secondary-color,#8b5cf6) 100%)",
-                                            WebkitBackgroundClip: 'text',
-                                            backgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
                                             color: "var(--primary-color,#3b82f6)",
                                         }}
                                     >
