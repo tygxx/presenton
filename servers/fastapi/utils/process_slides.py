@@ -145,10 +145,11 @@ async def process_old_and_new_slides_and_fetch_assets(
         if new_image["__image_prompt__"] in old_image_prompts:
             old_image_url = old_image_dicts[
                 old_image_prompts.index(new_image["__image_prompt__"])
-            ]["__image_url__"]
-            new_image["__image_url__"] = old_image_url
-            new_images_fetch_status.append(False)
-            continue
+            ].get("__image_url__")
+            if old_image_url:
+                new_image["__image_url__"] = old_image_url
+                new_images_fetch_status.append(False)
+                continue
 
         async_image_fetch_tasks.append(
             image_generation_service.generate_image(
@@ -165,10 +166,11 @@ async def process_old_and_new_slides_and_fetch_assets(
         if new_icon["__icon_query__"] in old_icon_queries:
             old_icon_url = old_icon_dicts[
                 old_icon_queries.index(new_icon["__icon_query__"])
-            ]["__icon_url__"]
-            new_icon["__icon_url__"] = old_icon_url
-            new_icons_fetch_status.append(False)
-            continue
+            ].get("__icon_url__")
+            if old_icon_url:
+                new_icon["__icon_url__"] = old_icon_url
+                new_icons_fetch_status.append(False)
+                continue
 
         async_icon_fetch_tasks.append(
             ICON_FINDER_SERVICE.search_icons(
