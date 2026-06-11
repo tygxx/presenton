@@ -37,6 +37,13 @@ interface FastApiEnv {
   TOOL_CALLS?: string,
   DISABLE_THINKING?: string,
   WEB_GROUNDING?: string,
+  WEB_SEARCH_PROVIDER?: string,
+  WEB_SEARCH_MAX_RESULTS?: string,
+  SEARXNG_BASE_URL?: string,
+  TAVILY_API_KEY?: string,
+  EXA_API_KEY?: string,
+  BRAVE_SEARCH_API_KEY?: string,
+  SERPER_API_KEY?: string,
   DATABASE_URL?: string,
   DISABLE_ANONYMOUS_TRACKING?: string,
   COMFYUI_URL?: string,
@@ -52,8 +59,18 @@ interface FastApiEnv {
   DISABLE_AUTH?: string,
   /** Absolute path to the resolved LibreOffice executable discovered at startup. */
   SOFFICE_PATH?: string,
-  /** Absolute path to the ImageMagick binary resolved at startup by imagemagick-check.ts. */
+  /** Office renderer for PPTX/office conversion (always libreoffice when set). */
+  PRESENTON_OFFICE_RENDERER?: string,
+  /** Absolute path to the bundled/resolved ImageMagick magick executable. */
   IMAGEMAGICK_BINARY?: string,
+  /** ImageMagick runtime root used by the bundled portable build. */
+  MAGICK_HOME?: string,
+  /** ImageMagick configuration directory used by the bundled portable build. */
+  MAGICK_CONFIGURE_PATH?: string,
+  /** POSIX-style path key used on macOS/Linux child processes. */
+  PATH?: string,
+  /** Windows path key, preserved to avoid duplicate PATH/Path env entries. */
+  Path?: string,
   /** Absolute path to the bundled LiteParse runner script. */
   LITEPARSE_RUNNER_PATH?: string,
   /** Binary path used by LiteParseService to execute liteparse_runner.mjs. */
@@ -121,6 +138,13 @@ interface UserConfig {
   TOOL_CALLS?: string,
   DISABLE_THINKING?: string,
   WEB_GROUNDING?: string,
+  WEB_SEARCH_PROVIDER?: string,
+  WEB_SEARCH_MAX_RESULTS?: string,
+  SEARXNG_BASE_URL?: string,
+  TAVILY_API_KEY?: string,
+  EXA_API_KEY?: string,
+  BRAVE_SEARCH_API_KEY?: string,
+  SERPER_API_KEY?: string,
   DATABASE_URL?: string,
   DISABLE_ANONYMOUS_TRACKING?: string,
   COMFYUI_URL?: string,
