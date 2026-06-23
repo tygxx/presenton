@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Send,
   Square,
+  UserRound,
 } from "lucide-react";
 import React, {
   FormEvent,
@@ -25,6 +26,7 @@ import { PresentationChatApi } from "../../services/api/chat";
 import type { ChatStreamTrace } from "../../services/api/chat";
 import { is } from "@babel/types";
 import ToolTip from "@/components/ToolTip";
+import { cn } from "@/lib/utils";
 
 const suggestions: { id: string; icon: ReactNode; suggestion: string }[] = [
   {
@@ -217,11 +219,14 @@ const suggestions: { id: string; icon: ReactNode; suggestion: string }[] = [
   },
 ];
 
-const quickPrompts = [
-  "把每个章节扩写得更详细",
-  "按讲故事的顺序重新排序",
-  "补全缺失的章节",
-  "改写成路演结构",
+const outlineQuickPrompts = [
+  "扩写大纲",
+  "精简大纲",
+  "重新排序章节",
+  "合并相似幻灯片",
+  "拆分较大章节",
+  "优化结论",
+  "优化引言",
 ];
 
 type ChatMessage = {
@@ -234,7 +239,9 @@ type ChatMessage = {
 
 type ChatProps = {
   presentationId: string;
+  variant?: "presentation" | "outline";
   currentSlide?: number;
+  onBeforeSend?: () => Promise<void> | void;
   onPresentationChanged?: () => Promise<void> | void;
   onChatMutationStateChange?: (isMutating: boolean) => void;
   onAgentSlideFocus?: (focus: {
@@ -277,6 +284,11 @@ const AssistantMarker = () => (
 
 const TOOL_LABELS: Record<string, string> = {
   getPresentationOutline: "读取大纲",
+  getOutlineDraft: "读取大纲草稿",
+  addOutline: "新增大纲",
+  updateOutline: "编辑大纲",
+  deleteOutline: "删除大纲",
+  moveOutline: "调整大纲顺序",
   searchSlides: "搜索幻灯片",
   getSlideAtIndex: "读取幻灯片",
   getPresentationThemeCatalog: "查询主题列表",
@@ -289,6 +301,10 @@ const TOOL_LABELS: Record<string, string> = {
 };
 
 const MUTATING_TOOLS = new Set([
+  "addOutline",
+  "updateOutline",
+  "deleteOutline",
+  "moveOutline",
   "saveSlide",
   "deleteSlide",
   "setPresentationTheme",
@@ -318,6 +334,21 @@ const humanizeTraceMessage = (message: string, tool?: string) => {
   }
   if (lower === "reading the presentation outline") {
     return "正在读取演示大纲。";
+  }
+  if (lower === "reading the outline draft") {
+    return "正在读取大纲草稿。";
+  }
+  if (lower === "adding an outline slide") {
+    return "正在新增大纲幻灯片。";
+  }
+  if (lower === "updating the outline slide") {
+    return "正在更新大纲幻灯片。";
+  }
+  if (lower === "deleting the outline slide") {
+    return "正在删除大纲幻灯片。";
+  }
+  if (lower === "reordering outline slides") {
+    return "正在调整大纲幻灯片顺序。";
   }
   if (lower === "searching relevant slides") {
     return "正在搜索相关幻灯片。";
@@ -496,7 +527,9 @@ const readTraceSlideIndex = (trace: ChatStreamTrace) => {
 
 const Chat = ({
   presentationId,
+  variant = "presentation",
   currentSlide,
+  onBeforeSend,
   onPresentationChanged,
   onChatMutationStateChange,
   onAgentSlideFocus,
@@ -749,16 +782,27 @@ const Chat = ({
   );
 
   const buildBackendMessage = (message: string) => {
-    if (typeof currentSlide !== "number") {
+    const contextLines: string[] = [];
+
+    if (variant === "outline") {
+      contextLines.push(
+        "UI context: the user is editing the outline draft before template/layout selection. Use outline draft tools for outline add/edit/delete/reorder requests; do not use layout or finished-slide tools for outline-only edits."
+      );
+    }
+
+    if (typeof currentSlide === "number") {
+      contextLines.push(
+        `UI context: the currently selected slide is slide ${
+          currentSlide + 1
+        } (zero-based index ${currentSlide}).`
+      );
+    }
+
+    if (contextLines.length === 0) {
       return message;
     }
 
-    return [
-      `UI context: the currently selected slide is slide ${
-        currentSlide + 1
-      } (zero-based index ${currentSlide}).`,
-      `User message: ${message}`,
-    ].join("\n");
+    return [...contextLines, `User message: ${message}`].join("\n");
   };
 
   const resetChat = () => {
@@ -789,7 +833,10 @@ const Chat = ({
     try {
       await onPresentationChanged();
     } catch (error) {
-      console.error("Failed to refresh presentation after tool mutation:", error);
+      console.error(
+        "Failed to refresh presentation after tool mutation:",
+        error
+      );
       notify.error("刷新失败", "幻灯片已保存，但刷新失败。");
     } finally {
       refreshInFlightRef.current = false;
@@ -801,12 +848,9 @@ const Chat = ({
   }, [onPresentationChanged]);
 
   const refreshPresentationIfNeeded = async (toolCalls: string[]) => {
-    const hasSlideMutation =
-      toolCalls.includes("saveSlide") ||
-      toolCalls.includes("deleteSlide") ||
-      toolCalls.includes("setPresentationTheme");
+    const hasMutation = toolCalls.some((tool) => MUTATING_TOOLS.has(tool));
     if (
-      !hasSlideMutation ||
+      !hasMutation ||
       !onPresentationChanged ||
       didIncrementalRefreshRef.current
     ) {
@@ -952,6 +996,7 @@ const Chat = ({
     abortControllerRef.current = streamAbortController;
 
     try {
+      await onBeforeSend?.();
       const response = await PresentationChatApi.streamMessage(
         {
           presentation_id: presentationId,
@@ -1112,8 +1157,10 @@ const Chat = ({
     inputRef.current?.focus();
   };
 
+  const isOutlineVariant = variant === "outline";
+
   return (
-    <div className="flex h-full w-full flex-col bg-white">
+    <div className={cn("flex h-full w-full flex-col bg-white", "")}>
       <div className="flex items-center justify-between px-4 pt-8">
         <div className="flex items-center gap-2">
           <h4 className="flex items-center gap-2 text-sm font-semibold text-[#101828]">
@@ -1143,19 +1190,21 @@ const Chat = ({
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={resetChat}
-          disabled={isSending || isHistoryLoading}
-          className="rounded-full p-1 text-[#8C8C8C] transition-colors hover:bg-[#F7F7F7] hover:text-[#191919] disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="重置会话"
-          title="重置会话"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </button>
+        {!isOutlineVariant && (
+          <button
+            type="button"
+            onClick={resetChat}
+            disabled={isSending || isHistoryLoading}
+            className="rounded-full p-1 text-[#8C8C8C] transition-colors hover:bg-[#F7F7F7] hover:text-[#191919] disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="重置会话"
+            title="重置会话"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-9 hide-scrollbar">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-9 [scrollbar-color:#C7CBD6_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#C7CBD6] [&::-webkit-scrollbar-track]:bg-transparent">
         {isHistoryLoading && messages.length === 0 ? (
           <div className="flex items-center justify-center py-8 text-sm text-[#99A1AF]">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1163,46 +1212,48 @@ const Chat = ({
           </div>
         ) : messages.length === 0 ? (
           <>
-            <div>
-              <h4 className="mb-2 text-[10px] font-normal leading-[15px] tracking-[0.367px] text-[#99A1AF]">
-推荐操作
-              </h4>
-              <div className="flex flex-col gap-1.5">
-                {suggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.id}
-                    type="button"
-                    onClick={() => applyPrompt(suggestion.suggestion)}
-                    className="flex cursor-pointer items-center gap-3 rounded-[10px] border border-[#F4F4F4] px-3 py-2 text-left transition-colors hover:bg-[#FAFAFA]"
-                  >
-                    {suggestion.icon}
-                    <span className="text-xs font-normal leading-[15px] tracking-[0.367px] text-[#364153]">
-                      {suggestion.suggestion}
-                    </span>
-                  </button>
-                ))}
+            {isOutlineVariant ? (
+              <div>
+                <h4 className="mb-2 text-[10px] font-normal leading-[15px] tracking-[0.367px] text-[#99A1AF]">
+                  快捷提示
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {outlineQuickPrompts.map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      onClick={() => applyPrompt(prompt)}
+                      className="cursor-pointer rounded-[10px] border border-[#F4F4F4] px-2.5 py-1 text-left transition-colors hover:bg-[#FAFAFA]"
+                    >
+                      <span className="text-[11px] font-normal leading-[15px] tracking-[0.367px] text-[#364153]">
+                        {prompt}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* <div className="mt-10">
-              <h4 className="mb-2 text-[10px] font-normal leading-[15px] tracking-[0.367px] text-[#99A1AF]">
-                QUICK PROMPTS
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {quickPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => applyPrompt(prompt)}
-                    className="cursor-pointer rounded-[10px] border border-[#F4F4F4] px-2.5 py-1 transition-colors hover:bg-[#FAFAFA]"
-                  >
-                    <span className="text-xs font-normal leading-[15px] tracking-[0.367px] text-[#364153]">
-                      {prompt}
-                    </span>
-                  </button>
-                ))}
+            ) : (
+              <div>
+                <h4 className="mb-2 text-[10px] font-normal leading-[15px] tracking-[0.367px] text-[#99A1AF]">
+                  推荐操作
+                </h4>
+                <div className="flex flex-col gap-1.5">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      type="button"
+                      onClick={() => applyPrompt(suggestion.suggestion)}
+                      className="flex cursor-pointer items-center gap-3 rounded-[10px] border border-[#F4F4F4] px-3 py-2 text-left transition-colors hover:bg-[#FAFAFA]"
+                    >
+                      {suggestion.icon}
+                      <span className="text-xs font-normal leading-[15px] tracking-[0.367px] text-[#364153]">
+                        {suggestion.suggestion}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div> */}
+            )}
           </>
         ) : (
           <div className="flex flex-col gap-9">
@@ -1217,8 +1268,8 @@ const Chat = ({
                       {stripBackendContextFromUserMessage(message.content)}
                     </p>
                   </div>
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF8617] text-sm font-semibold text-white">
-                    U
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF8617] text-white">
+                    <UserRound className="h-4 w-4" aria-hidden="true" />
                   </div>
                 </div>
               ) : (
@@ -1323,7 +1374,11 @@ const Chat = ({
           disabled={isSending || isHistoryLoading}
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="告诉我如何优化你的幻灯片…"
+          placeholder={
+            isOutlineVariant
+              ? "重新生成这份大纲"
+              : "告诉我如何优化你的幻灯片…"
+          }
           aria-invalid={Boolean(errorMessage)}
         />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">

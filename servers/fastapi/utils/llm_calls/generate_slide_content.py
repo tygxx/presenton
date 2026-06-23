@@ -67,6 +67,10 @@ English (icon/image search queries and image prompts must always be English noun
 # SLIDE CONTENT: END
 """
 
+AUTO_DETECT_LANGUAGE_INSTRUCTION = (
+    "auto-detect from the slide content and use the same language as the slide content"
+)
+
 
 def _has_cjk(text: Optional[str]) -> bool:
     """Lightweight heuristic: True if text contains a meaningful share of CJK characters."""
@@ -102,7 +106,7 @@ def _resolve_prompt_language(
     # drifting into English.
     if _has_cjk(content):
         return "Chinese (Simplified) — output all body/title text in 简体中文"
-    return "auto-detect"
+    return AUTO_DETECT_LANGUAGE_INSTRUCTION
 
 
 def _get_schema_markdown(response_schema: Optional[dict]) -> str:

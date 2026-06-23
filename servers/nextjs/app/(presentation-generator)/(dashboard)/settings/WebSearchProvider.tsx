@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
-import { Eye, EyeOff, Search, Check, ChevronUp } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import React, { useCallback, useState } from "react";
+import { Check, ChevronUp, Eye, EyeOff, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -12,20 +11,17 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 
 import { LLMConfig } from "@/types/llm_config";
 import { WEB_SEARCH_PROVIDERS } from "@/utils/providerConstants";
+import { MixpanelEvent, trackEvent } from "@/utils/mixpanel";
 
 const EXTERNAL_WEB_SEARCH_OPTIONS = [
   "exa",
   "tavily",
-  // "brave",
+  "brave",
   // "serper",
   "searxng",
 ] as const;
@@ -57,14 +53,8 @@ const WebSearchProvider = ({
     (option) => option.value === selectedRaw
   )
     ? selectedRaw
-    : "auto";
-  const provider = WEB_SEARCH_PROVIDERS[selected] || WEB_SEARCH_PROVIDERS.auto;
-
-  useEffect(() => {
-    if (selectedRaw !== selected) {
-      update("WEB_SEARCH_PROVIDER", selected);
-    }
-  }, [selected, selectedRaw, update]);
+    : "";
+  const provider = selected ? WEB_SEARCH_PROVIDERS[selected] : undefined;
 
   const getValue = (field?: string) =>
     field ? String(llmConfig[field as keyof LLMConfig] || "") : "";
@@ -76,7 +66,14 @@ const WebSearchProvider = ({
           <Switch
             checked={isWebSearchEnabled}
             className="data-[state=checked]:bg-[#4791FF] data-[state=unchecked]:bg-gray-400"
-            onCheckedChange={(checked) => update("WEB_GROUNDING", checked)}
+            onCheckedChange={(checked) => {
+              trackEvent(MixpanelEvent.Settings_Provider_Selected, {
+                section: "web_search_provider",
+                enabled: checked,
+                provider: checked ? selected : "disabled",
+              });
+              update("WEB_GROUNDING", checked);
+            }}
           />
         </div>
         <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:gap-10">
@@ -88,91 +85,74 @@ const WebSearchProvider = ({
               Web Search Settings
             </h3>
             <p className="text-sm text-gray-500">
-              Configure external search only when web search is enabled.
+              Choose a provider to enable web search, or leave it disabled.
             </p>
           </div>
-          <div className="w-full max-w-[360px] space-y-4">
-            {!isWebSearchEnabled ? (
-              <div className="rounded-lg border border-[#EDEEEF] bg-[#FAFAFA] p-4 text-sm text-[#4C5554]">
-                Web search is currently disabled. Enable it to choose provider
-                settings.
-              </div>
-            ) : (
-              <>
-                <div>
+          {isWebSearchEnabled && <div className="w-full max-w-[720px] space-y-4">
+                <div className="ml-auto w-[222px]">
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Provider
                   </label>
-                  <Popover
-                    open={openProviderSelect}
-                    onOpenChange={setOpenProviderSelect}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openProviderSelect}
-                        className="w-[205px] h-12 px-4 py-4 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors hover:border-gray-400 justify-between"
-                      >
-                        <div className="flex gap-3 items-center">
-                          <span className="text-sm font-medium text-gray-900">
-                            {WEB_SEARCH_PROVIDER_OPTIONS.find(
-                              (option) => option.value === selected
-                            )?.label || "Select web search provider"}
+                  <div className="w-full">
+                    <Popover open={openProviderSelect} onOpenChange={setOpenProviderSelect}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openProviderSelect}
+                          className="h-12 w-[222px] justify-between rounded-lg border border-gray-300 px-4 py-4 outline-none transition-colors hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        >
+                          <span className="truncate text-sm font-medium text-gray-900">
+                            {selected
+                              ? WEB_SEARCH_PROVIDERS[selected]?.label || selected
+                              : "Select web search provider"}
                           </span>
-                        </div>
-                        <ChevronUp className="w-4 h-4 text-gray-500" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="p-0"
-                      align="start"
-                      style={{ width: "300px" }}
-                    >
-                      <Command>
-                        <CommandInput placeholder="Search provider..." />
-                        <CommandList>
-                          <CommandEmpty>No provider found.</CommandEmpty>
-                          <CommandGroup>
-                            {WEB_SEARCH_PROVIDER_OPTIONS.map((option) => (
-                              <CommandItem
-                                key={option.value}
-                                value={option.value}
-                                onSelect={(value) => {
-                                  update("WEB_SEARCH_PROVIDER", value);
-                                  setOpenProviderSelect(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selected === option.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                <div className="flex gap-3 items-center">
-                                  <div className="flex flex-col space-y-1 flex-1">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <span className="text-sm font-medium text-gray-900 capitalize">
-                                        {option.label}
-                                      </span>
-                                    </div>
-                                    <span className="text-xs text-gray-600 leading-relaxed">
+                          <ChevronUp className="h-4 w-4 text-gray-500" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0" align="start" style={{ width: "320px" }}>
+                        <Command>
+                          <CommandInput placeholder="Search provider..." />
+                          <CommandList>
+                            <CommandEmpty>No provider found.</CommandEmpty>
+                            <CommandGroup>
+                              {WEB_SEARCH_PROVIDER_OPTIONS.map((option) => (
+                                <CommandItem
+                                  key={option.value}
+                                  value={option.value}
+                                  onSelect={(value) => {
+                                    trackEvent(MixpanelEvent.Settings_Provider_Selected, {
+                                      section: "web_search_provider",
+                                      provider: value,
+                                    });
+                                    update("WEB_GROUNDING", true);
+                                    update("WEB_SEARCH_PROVIDER", value);
+                                    setOpenProviderSelect(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={
+                                      selected === option.value
+                                        ? "mr-2 h-4 w-4 opacity-100"
+                                        : "mr-2 h-4 w-4 opacity-0"
+                                    }
+                                  />
+                                  <div className="flex flex-1 flex-col space-y-1">
+                                    <span className="text-sm font-medium text-gray-900">
+                                      {option.label}
+                                    </span>
+                                    <span className="text-xs leading-relaxed text-gray-600">
                                       {option.description}
                                     </span>
                                   </div>
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <p className="mt-2 text-xs leading-relaxed text-gray-500">
-                    {provider.description}
-                  </p>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
 
                 {selected === "auto" && (
@@ -182,7 +162,7 @@ const WebSearchProvider = ({
                   </div>
                 )}
 
-                {provider.urlField && (
+                {provider?.urlField && (
                   <div>
                     <label className="mb-2 block text-sm font-medium text-[#4C5554]">
                       {provider.urlLabel}
@@ -202,7 +182,7 @@ const WebSearchProvider = ({
                   </div>
                 )}
 
-                {provider.apiKeyField && (
+                {provider?.apiKeyField && (
                   <div>
                     <label className="mb-2 block text-sm font-medium text-[#4C5554]">
                       {provider.apiKeyLabel}
@@ -234,7 +214,7 @@ const WebSearchProvider = ({
                   </div>
                 )}
 
-                {selected !== "auto" && (
+                {selected && selected !== "auto" && (
                   <div>
                     <label className="mb-2 block text-sm font-medium text-[#4C5554]">
                       Maximum results
@@ -251,9 +231,7 @@ const WebSearchProvider = ({
                     />
                   </div>
                 )}
-              </>
-            )}
-          </div>
+          </div>}
         </div>
       </div>
     </div>

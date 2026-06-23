@@ -32,3 +32,7 @@ servers/fastapi/dist/
 servers/fastapi/fastembed_cache/
 servers/fastapi/*.egg-info/
 .codex/
+
+# macOS junk
+.DS_Store
+**/.DS_Store

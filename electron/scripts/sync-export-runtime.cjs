@@ -37,12 +37,14 @@ async function getTargetVersion() {
 
 function getPlatformAssetName() {
   const platformArch = `${process.platform}-${process.arch}`;
+  if (platformArch === "linux-arm64") return "export-Linux-ARM64.zip";
   if (platformArch === "linux-x64") return "export-Linux-X64.zip";
   if (platformArch === "darwin-arm64") return "export-macOS-ARM64.zip";
+  if (platformArch === "darwin-x64") return "export-macOS-X64.zip";
   if (platformArch === "win32-x64") return "export-Windows-X64.zip";
 
   throw new Error(
-    `Unsupported export runtime platform: ${platformArch}. Supported: linux-x64, darwin-arm64, win32-x64`
+    `Unsupported export runtime platform: ${platformArch}. Supported: linux-arm64, linux-x64, darwin-arm64, darwin-x64, win32-x64`
   );
 }
 
@@ -161,6 +163,29 @@ function validateExistingRuntime() {
 
   chmodIfPossible(converterPath);
   return { ok: true, converterPath };
+}
+
+function patchHtmlToImageRuntime() {
+  if (!fs.existsSync(targetIndex)) {
+    return false;
+  }
+
+  const original = fs.readFileSync(targetIndex, "utf8");
+  let patched = original.replace(
+    'await C.setContent(a.html,{waitUntil:"networkidle0",timeout:12e4})',
+    'await C.setContent(a.html,{waitUntil:"domcontentloaded",timeout:12e4})',
+  );
+  patched = patched.replace(
+    'catch(C){throw C instanceof ig?C:new ig("Failed to render HTML to image",500)}',
+    'catch(C){console.error("[html-to-image]",C);throw C instanceof ig?C:new ig("Failed to render HTML to image",500)}',
+  );
+
+  if (patched === original) {
+    return false;
+  }
+  fs.writeFileSync(targetIndex, patched);
+  console.log("[export-runtime] Patched HTML-to-image readiness and error logging.");
+  return true;
 }
 
 function hasExportDirectoryContent() {
@@ -490,6 +515,7 @@ async function main() {
   }
 
   if (existing.ok && !forceDownload) {
+    patchHtmlToImageRuntime();
     console.log("[export-runtime] Using existing runtime artifacts:");
     console.log(`  - ${targetIndex}`);
     console.log(`  - ${existing.converterPath}`);
@@ -501,6 +527,7 @@ async function main() {
   }
 
   const { tag, downloadUrl } = await downloadAndInstallRuntime();
+  patchHtmlToImageRuntime();
   const installed = validateExistingRuntime();
   if (!installed.ok) {
     throw new Error(installed.reason);

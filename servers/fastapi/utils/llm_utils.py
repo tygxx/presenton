@@ -87,7 +87,7 @@ def get_generate_kwargs(
     if final_response_format is not None:
         kwargs["response_format"] = final_response_format
 
-    extra_body = get_extra_body()
+    extra_body = get_extra_body(uses_tool_choice=bool(tools or response_format))
     if extra_body:
         kwargs["extra_body"] = extra_body
 

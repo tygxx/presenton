@@ -7,6 +7,9 @@ from utils.get_env import (
     get_custom_llm_api_key_env,
     get_custom_llm_url_env,
     get_custom_model_env,
+    get_deepseek_api_key_env,
+    get_deepseek_base_url_env,
+    get_deepseek_model_env,
     get_dall_e_3_quality_env,
     get_disable_image_generation_env,
     get_disable_thinking_env,
@@ -91,6 +94,9 @@ from utils.set_env import (
     set_custom_llm_api_key_env,
     set_custom_llm_url_env,
     set_custom_model_env,
+    set_deepseek_api_key_env,
+    set_deepseek_base_url_env,
+    set_deepseek_model_env,
     set_dall_e_3_quality_env,
     set_disable_image_generation_env,
     set_disable_thinking_env,
@@ -170,9 +176,11 @@ def get_user_config():
     user_config_path = get_user_config_path_env()
 
     existing_config = UserConfig()
+    existing_config_data = {}
     try:
         if user_config_path:
-            existing_config = UserConfig(**read_user_config_file(user_config_path))
+            existing_config_data = read_user_config_file(user_config_path)
+            existing_config = UserConfig(**existing_config_data)
     except Exception:
         print("Error while loading user config")
         pass
@@ -233,12 +241,19 @@ def get_user_config():
         ANTHROPIC_API_KEY=existing_config.ANTHROPIC_API_KEY
         or get_anthropic_api_key_env(),
         ANTHROPIC_MODEL=existing_config.ANTHROPIC_MODEL or get_anthropic_model_env(),
-        OLLAMA_URL=existing_config.OLLAMA_URL or get_ollama_url_env(),
+        OLLAMA_URL=(
+            existing_config.OLLAMA_URL
+            if "OLLAMA_URL" in existing_config_data
+            else get_ollama_url_env()
+        ),
         OLLAMA_MODEL=existing_config.OLLAMA_MODEL or get_ollama_model_env(),
         CUSTOM_LLM_URL=existing_config.CUSTOM_LLM_URL or get_custom_llm_url_env(),
         CUSTOM_LLM_API_KEY=existing_config.CUSTOM_LLM_API_KEY
         or get_custom_llm_api_key_env(),
         CUSTOM_MODEL=existing_config.CUSTOM_MODEL or get_custom_model_env(),
+        DEEPSEEK_BASE_URL=existing_config.DEEPSEEK_BASE_URL or get_deepseek_base_url_env(),
+        DEEPSEEK_API_KEY=existing_config.DEEPSEEK_API_KEY or get_deepseek_api_key_env(),
+        DEEPSEEK_MODEL=existing_config.DEEPSEEK_MODEL or get_deepseek_model_env(),
         IMAGE_PROVIDER=existing_config.IMAGE_PROVIDER or get_image_provider_env(),
         DISABLE_IMAGE_GENERATION=(
             existing_config.DISABLE_IMAGE_GENERATION
@@ -388,7 +403,7 @@ def update_env_with_user_config():
         set_anthropic_api_key_env(user_config.ANTHROPIC_API_KEY)
     if user_config.ANTHROPIC_MODEL:
         set_anthropic_model_env(user_config.ANTHROPIC_MODEL)
-    if user_config.OLLAMA_URL:
+    if user_config.OLLAMA_URL is not None:
         set_ollama_url_env(user_config.OLLAMA_URL)
     if user_config.OLLAMA_MODEL:
         set_ollama_model_env(user_config.OLLAMA_MODEL)
@@ -398,6 +413,12 @@ def update_env_with_user_config():
         set_custom_llm_api_key_env(user_config.CUSTOM_LLM_API_KEY)
     if user_config.CUSTOM_MODEL:
         set_custom_model_env(user_config.CUSTOM_MODEL)
+    if user_config.DEEPSEEK_BASE_URL:
+        set_deepseek_base_url_env(user_config.DEEPSEEK_BASE_URL)
+    if user_config.DEEPSEEK_API_KEY:
+        set_deepseek_api_key_env(user_config.DEEPSEEK_API_KEY)
+    if user_config.DEEPSEEK_MODEL:
+        set_deepseek_model_env(user_config.DEEPSEEK_MODEL)
     if user_config.DISABLE_IMAGE_GENERATION is not None:
         set_disable_image_generation_env(str(user_config.DISABLE_IMAGE_GENERATION))
     if user_config.IMAGE_PROVIDER:

@@ -1,5 +1,5 @@
 /**
- * Download presenton-export release (Linux x64) into repo-root `presentation-export/`.
+ * Download presenton-export release into repo-root `presentation-export/`.
  * Same release host as Electron (`electron/scripts/sync-export-runtime.cjs`); Docker uses this at build time.
  *
  * Version resolution (first match):
@@ -29,20 +29,43 @@ const exportRepoBase =
   (process.env.EXPORT_REPO_BASE || "").trim() ||
   "https://github.com/presenton/presenton-export/releases/download";
 
+// Linux 走上游的架构感知解析（X64/ARM64，供 Docker 多架构构建）；darwin/win32 走本机
+// 裸跑（macOS arm64 本地开发、Windows）所需的资产名。
 function getPlatformAssetName() {
+  if (process.platform === "linux") {
+    return resolveLinuxAssetName();
+  }
   const platformArch = `${process.platform}-${process.arch}`;
-  if (platformArch === "linux-x64") return "export-Linux-X64.zip";
   if (platformArch === "darwin-arm64") return "export-macOS-ARM64.zip";
   if (platformArch === "win32-x64") return "export-Windows-X64.zip";
 
   throw new Error(
-    `Unsupported export runtime platform: ${platformArch}. Supported: linux-x64, darwin-arm64, win32-x64`
+    `Unsupported export runtime platform: ${platformArch}. Supported: linux-x64, linux-arm64, darwin-arm64, win32-x64`
   );
 }
 
 const cliArgs = new Set(process.argv.slice(2));
 const forceDownload = cliArgs.has("--force");
 const checkOnly = cliArgs.has("--check-only");
+
+function resolveLinuxAssetName() {
+  const arch = (
+    process.env.EXPORT_RUNTIME_ARCH ||
+    process.env.TARGETARCH ||
+    process.arch
+  ).toLowerCase();
+
+  if (arch === "amd64" || arch === "x64") {
+    return "export-Linux-X64.zip";
+  }
+  if (arch === "arm64" || arch === "aarch64") {
+    return "export-Linux-ARM64.zip";
+  }
+
+  throw new Error(`Unsupported Linux export arch: ${arch}`);
+}
+
+const linuxAssetName = resolveLinuxAssetName();
 
 function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -134,7 +157,22 @@ function chmodIfPossible(filePath) {
   }
 }
 
+function ensureCurrentConverterLink(converterPath) {
+  const currentPath = path.join(targetPyDir, "convert-linux-current");
+  fs.rmSync(currentPath, { force: true });
+
+  if (process.platform === "win32") {
+    fs.copyFileSync(converterPath, currentPath);
+    return currentPath;
+  }
+
+  fs.symlinkSync(path.basename(converterPath), currentPath);
+  return currentPath;
+}
+
 function getConverterCandidates(baseDir = targetPyDir) {
+  // 跨平台候选枚举（本机裸跑需要 darwin/win 变体），且是上游 Linux 二进制名
+  // （convert-linux-x64 / convert-linux-arm64）的超集，Docker 构建同样命中。
   const platformAliases = {
     linux: ["linux"],
     darwin: ["darwin", "macos", "mac"],
@@ -241,7 +279,13 @@ function validateExistingRuntime() {
     };
   }
   chmodIfPossible(converterPath);
-  return { ok: true, entrypointPath: entrypoint.entrypointPath, converterPath };
+  const currentConverterPath = ensureCurrentConverterLink(converterPath);
+  return {
+    ok: true,
+    entrypointPath: entrypoint.entrypointPath,
+    converterPath,
+    currentConverterPath,
+  };
 }
 
 function downloadFile(url, outputPath, redirects = 5) {
@@ -339,6 +383,7 @@ async function main() {
     console.log("[presentation-export] OK");
     console.log(`  - ${existing.entrypointPath}`);
     console.log(`  - ${existing.converterPath}`);
+    console.log(`  - ${existing.currentConverterPath}`);
     return;
   }
 
@@ -346,6 +391,7 @@ async function main() {
     console.log("[presentation-export] Using existing runtime:");
     console.log(`  - ${existing.entrypointPath}`);
     console.log(`  - ${existing.converterPath}`);
+    console.log(`  - ${existing.currentConverterPath}`);
     return;
   }
 
@@ -360,6 +406,7 @@ async function main() {
   console.log(`  - url: ${downloadUrl}`);
   console.log(`  - ${installed.entrypointPath}`);
   console.log(`  - ${installed.converterPath}`);
+  console.log(`  - ${installed.currentConverterPath}`);
 }
 
 main().catch((err) => {

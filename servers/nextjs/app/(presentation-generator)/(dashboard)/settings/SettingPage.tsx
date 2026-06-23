@@ -1,7 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { Loader2, Download, CheckCircle, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useCallback } from "react";
+import { Loader2, ChevronRight } from "lucide-react";
 import { notify } from "@/components/ui/sonner";
 import { RootState } from "@/store/store";
 import { useSelector } from "react-redux";
@@ -9,14 +8,11 @@ import {
   getLLMConfigValidationError,
   handleSaveLLMConfig,
 } from "@/utils/storeHelpers";
-import {
-  checkIfSelectedOllamaModelIsPulled,
-  pullOllamaModel,
-} from "@/utils/providerUtils";
+import { isOllamaModelAvailable } from "@/utils/providerUtils";
 import { useRouter, usePathname } from "next/navigation";
 import { LLMConfig } from "@/types/llm_config";
 import { trackEvent, MixpanelEvent } from "@/utils/mixpanel";
-import SettingSideBar from "./SettingSideBar";
+import SettingSideBar, { SettingsSection } from "./SettingSideBar";
 import TextProvider from "./TextProvider";
 import ImageProvider from "./ImageProvider";
 import WebSearchProvider from "./WebSearchProvider";
@@ -45,10 +41,7 @@ interface ButtonState {
 const SettingsPage = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const [mode, setMode] = useState<'nanobanana' | 'presenton'>('presenton')
-  const [selectedProvider, setSelectedProvider] = useState<
-    "text-provider" | "image-provider" | "web-search-provider" | "privacy" | "session"
-  >("text-provider");
+  const [selectedProvider, setSelectedProvider] = useState<SettingsSection>("text-provider");
   const userConfigState = useSelector((state: RootState) => state.userConfig);
   const [llmConfig, setLlmConfig] = useState<LLMConfig>(
     userConfigState.llm_config
@@ -61,28 +54,31 @@ const SettingsPage = () => {
     showProgress: false,
   });
 
-  const [downloadingModel, setDownloadingModel] = useState<{
-    name: string;
-    size: number | null;
-    downloaded: number | null;
-    status: string;
-    done: boolean;
-  } | null>(null);
-  const [showDownloadModal, setShowDownloadModal] = useState<boolean>(false);
-  const downloadAbortRef = React.useRef<AbortController | null>(null);
+  const handleTextProviderInputChange = useCallback(
+    (value: string | boolean, field: string) => {
+      setLlmConfig((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    },
+    []
+  );
 
-  const downloadProgress = React.useMemo(() => {
-    if (
-      downloadingModel &&
-      downloadingModel.downloaded !== null &&
-      downloadingModel.size !== null
-    ) {
-      return Math.round(
-        (downloadingModel.downloaded / downloadingModel.size) * 100
-      );
-    }
-    return 0;
-  }, [downloadingModel]);
+  const selectSettingsSection = (section: SettingsSection) => {
+    trackEvent(MixpanelEvent.Settings_Tab_Switched, {
+      from_section: selectedProvider,
+      to_section: section,
+    });
+    setSelectedProvider(section);
+  };
+
+  useEffect(() => {
+    trackEvent(MixpanelEvent.Settings_Section_Entered, {
+      section: selectedProvider,
+      image_generation_enabled: !llmConfig.DISABLE_IMAGE_GENERATION,
+      web_search_enabled: !!llmConfig.WEB_GROUNDING,
+    });
+  }, [selectedProvider, llmConfig.DISABLE_IMAGE_GENERATION, llmConfig.WEB_GROUNDING]);
 
   const ensureSelectedStockProviderReady = async (): Promise<boolean> => {
     if (llmConfig.DISABLE_IMAGE_GENERATION) {
@@ -148,8 +144,8 @@ const SettingsPage = () => {
       notify.warning("无法保存设置", validationError);
       if (
         selectedProvider === "image-provider" &&
-        llmConfig.LLM === "openai" &&
-        !String(llmConfig.OPENAI_MODEL || "").trim()
+        ((llmConfig.LLM === "openai" && !String(llmConfig.OPENAI_MODEL || "").trim()) ||
+          (llmConfig.LLM === "deepseek" && !String(llmConfig.DEEPSEEK_MODEL || "").trim()))
       ) {
         setSelectedProvider("text-provider");
       }
@@ -169,35 +165,22 @@ const SettingsPage = () => {
         text: "正在保存配置…",
       }));
       trackEvent(MixpanelEvent.Settings_SaveConfiguration_API_Call);
-      await handleSaveLLMConfig(llmConfig);
-      let ollamaModelDownloaded = false;
-      if (llmConfig.LLM === "ollama" && llmConfig.OLLAMA_MODEL) {
-        trackEvent(MixpanelEvent.Settings_CheckOllamaModelPulled_API_Call);
-        const isPulled = await checkIfSelectedOllamaModelIsPulled(
-          llmConfig.OLLAMA_MODEL
+      if (
+        llmConfig.LLM === "ollama" &&
+        llmConfig.OLLAMA_MODEL &&
+        !(await isOllamaModelAvailable(
+          llmConfig.OLLAMA_MODEL,
+          llmConfig.OLLAMA_URL
+        ))
+      ) {
+        throw new Error(
+          `所选模型 "${llmConfig.OLLAMA_MODEL}" 在 ${llmConfig.OLLAMA_URL} 上不可用。请检查模型列表并选择一个可用的模型。`
         );
-        if (!isPulled) {
-          setShowDownloadModal(true);
-          setDownloadingModel({
-            name: llmConfig.OLLAMA_MODEL || "",
-            size: null,
-            downloaded: null,
-            status: "pulling",
-            done: false,
-          });
-          trackEvent(MixpanelEvent.Settings_DownloadOllamaModel_API_Call);
-          const downloadOutcome = await handleModelDownload();
-          if (downloadOutcome === "cancelled") {
-            return;
-          }
-          ollamaModelDownloaded = downloadOutcome === "completed";
-        }
       }
+      await handleSaveLLMConfig(llmConfig);
       notify.success(
-        ollamaModelDownloaded ? "设置已保存，模型已就绪" : "设置已保存",
-        ollamaModelDownloaded
-          ? "配置已保存，Ollama 模型也已下载完成。"
-          : "配置已成功保存。"
+        "设置已保存",
+        "配置已成功保存。"
       );
       setButtonState((prev) => ({
         ...prev,
@@ -220,68 +203,6 @@ const SettingsPage = () => {
     }
   };
 
-  const handleModelDownload = async (): Promise<"completed" | "cancelled"> => {
-    const ac = new AbortController();
-    downloadAbortRef.current = ac;
-    try {
-      await pullOllamaModel(
-        llmConfig.OLLAMA_MODEL!,
-        setDownloadingModel,
-        ac.signal
-      );
-      return "completed";
-    } catch (e) {
-      const aborted = e instanceof Error && e.name === "AbortError";
-      if (aborted) {
-        setDownloadingModel(null);
-        setShowDownloadModal(false);
-        setButtonState({
-          isLoading: false,
-          isDisabled: false,
-          text: "保存配置",
-          showProgress: false,
-        });
-        notify.info(
-          "下载已取消",
-          "已停止下载 Ollama 模型。你的设置已经保存，重新点击保存可再次开始下载。"
-        );
-        return "cancelled";
-      }
-      setDownloadingModel(null);
-      setShowDownloadModal(false);
-      throw e;
-    } finally {
-      downloadAbortRef.current = null;
-    }
-  };
-
-  useEffect(() => {
-    if (
-      downloadingModel &&
-      downloadingModel.downloaded !== null &&
-      downloadingModel.size !== null
-    ) {
-      const percentage = Math.round(
-        (downloadingModel.downloaded / downloadingModel.size) * 100
-      );
-      setButtonState({
-        isLoading: true,
-        isDisabled: true,
-        text: `正在下载模型（${percentage}%）`,
-        showProgress: true,
-        progressPercentage: percentage,
-        status: downloadingModel.status,
-      });
-    }
-
-    if (downloadingModel && downloadingModel.done) {
-      setTimeout(() => {
-        setShowDownloadModal(false);
-        setDownloadingModel(null);
-      }, 2000);
-    }
-  }, [downloadingModel]);
-
   useEffect(() => {
     if (!canChangeKeys) {
       router.push("/dashboard");
@@ -298,6 +219,8 @@ const SettingsPage = () => {
   const selectedTextModel =
     textProviderKey === "openai"
       ? llmConfig.OPENAI_MODEL
+      : textProviderKey === "deepseek"
+        ? llmConfig.DEEPSEEK_MODEL
       : textProviderKey === "google"
         ? llmConfig.GOOGLE_MODEL
         : textProviderKey === "vertex"
@@ -337,10 +260,10 @@ const SettingsPage = () => {
       ? IMAGE_PROVIDERS[llmConfig.IMAGE_PROVIDER]?.label ||
       llmConfig.IMAGE_PROVIDER
       : "未设置图像服务商";
-  const webSearchProviderKey = (llmConfig.WEB_SEARCH_PROVIDER || "auto").toLowerCase();
-  const webSearchSummary = `联网检索：${
-    WEB_SEARCH_PROVIDERS[webSearchProviderKey]?.label || webSearchProviderKey
-  }`;
+  const webSearchProviderKey = (llmConfig.WEB_SEARCH_PROVIDER || "").toLowerCase();
+  const webSearchSummary = llmConfig.WEB_GROUNDING
+    ? `联网检索：${WEB_SEARCH_PROVIDERS[webSearchProviderKey]?.label || "未设置服务商"}`
+    : "联网检索已关闭";
 
 
   useEffect(() => {
@@ -348,6 +271,7 @@ const SettingsPage = () => {
     if (
       (llmConfig.LLM === "codex" && !llmConfig.CODEX_MODEL) ||
       (llmConfig.LLM === "openai" && !llmConfig.OPENAI_MODEL) ||
+      (llmConfig.LLM === "deepseek" && !llmConfig.DEEPSEEK_MODEL) ||
       (llmConfig.LLM === "google" && !llmConfig.GOOGLE_MODEL) ||
       (llmConfig.LLM === "vertex" && !llmConfig.VERTEX_MODEL) ||
       (llmConfig.LLM === "azure" && !llmConfig.AZURE_OPENAI_MODEL) ||
@@ -359,11 +283,10 @@ const SettingsPage = () => {
       (llmConfig.LLM === "litellm" && !llmConfig.LITELLM_MODEL) ||
       (llmConfig.LLM === "lmstudio" && !llmConfig.LMSTUDIO_MODEL) ||
       (llmConfig.LLM === "anthropic" && !llmConfig.ANTHROPIC_MODEL) ||
-      (llmConfig.LLM === "ollama" && !llmConfig.OLLAMA_MODEL) ||
+      (llmConfig.LLM === "ollama" &&
+        (!llmConfig.OLLAMA_URL?.trim() || !llmConfig.OLLAMA_MODEL)) ||
       (llmConfig.LLM === "custom" && !llmConfig.CUSTOM_MODEL)
     ) {
-      notify.error("无法保存设置", "请为所选服务商选择一个模型");
-
       const currentUrl = window.location.href;
 
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -423,10 +346,8 @@ const SettingsPage = () => {
     <div className="h-screen font-syne flex flex-col overflow-hidden relative">
       <main className="w-full mx-auto gap-6   overflow-hidden flex ">
         <SettingSideBar
-          mode={mode}
-          setMode={setMode}
           selectedProvider={selectedProvider}
-          setSelectedProvider={setSelectedProvider}
+          setSelectedProvider={selectSettingsSection}
         />
         <div className="w-full">
           <div className="sticky top-0 right-0 z-50 py-[28px]   backdrop-blur mb-4 ">
@@ -440,22 +361,12 @@ const SettingsPage = () => {
             </div>
           </div>
 
-          {mode === 'nanobanana' && <div className=" w-full bg-[#F9F8F8] p-7 rounded-[20px]">
-            <h4>Nano Banana</h4>
-          </div>}
-          {mode === 'presenton' && selectedProvider === 'text-provider' && <TextProvider
-
-
-            onInputChange={(value, field) => {
-              setLlmConfig(prev => ({
-                ...prev,
-                [field]: value
-              }));
-            }}
+          {selectedProvider === 'text-provider' && <TextProvider
+            onInputChange={handleTextProviderInputChange}
             llmConfig={llmConfig}
           />}
-          {mode === 'presenton' && selectedProvider === 'image-provider' && <ImageProvider llmConfig={llmConfig} setLlmConfig={setLlmConfig} />}
-          {mode === 'presenton' && selectedProvider === 'web-search-provider' && <WebSearchProvider llmConfig={llmConfig} setLlmConfig={setLlmConfig} />}
+          {selectedProvider === 'image-provider' && <ImageProvider llmConfig={llmConfig} setLlmConfig={setLlmConfig} />}
+          {selectedProvider === 'web-search-provider' && <WebSearchProvider llmConfig={llmConfig} setLlmConfig={setLlmConfig} />}
           {selectedProvider === 'privacy' && <PrivacySettings />}
           {selectedProvider === "session" && (
             <div className="w-full max-w-lg space-y-5 rounded-[20px] border border-[#EDEEEF] bg-white p-7">
@@ -504,104 +415,6 @@ const SettingsPage = () => {
         </div>
       ) : null}
 
-      {/* Download Progress Modal */}
-      {showDownloadModal && downloadingModel && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl max-w-md w-full p-6 relative">
-            {/* Modal Content */}
-            <div className="text-center">
-              {/* Icon */}
-              <div className="mb-4">
-                {downloadingModel.done ? (
-                  <CheckCircle className="w-12 h-12 text-green-600 mx-auto" />
-                ) : (
-                  <Download className="w-12 h-12 text-blue-600 mx-auto animate-pulse" />
-                )}
-              </div>
-
-              {/* Title */}
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {downloadingModel.done
-                  ? "下载完成！"
-                  : "正在下载模型"}
-              </h3>
-
-              {/* Model Name */}
-              <p className="text-sm text-gray-600 mb-6">
-                {llmConfig.OLLAMA_MODEL}
-              </p>
-
-              {/* Progress Bar */}
-              {downloadProgress > 0 && (
-                <div className="mb-4">
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                    <div
-                      className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${downloadProgress}%` }}
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">
-                    已完成 {downloadProgress}%
-                  </p>
-                </div>
-              )}
-
-              {/* Status */}
-              {downloadingModel.status && (
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-700 capitalize">
-                    {downloadingModel.status}
-                  </span>
-                </div>
-              )}
-
-              {/* Status Message */}
-              {downloadingModel.status &&
-                downloadingModel.status !== "pulled" && (
-                  <div className="text-xs text-gray-500">
-                    {downloadingModel.status === "downloading" &&
-                      "正在下载模型文件…"}
-                    {downloadingModel.status === "verifying" &&
-                      "正在校验模型完整性…"}
-                    {downloadingModel.status === "pulling" &&
-                      "正在从模型仓库拉取…"}
-                  </div>
-                )}
-
-              {/* Download Info */}
-              {downloadingModel.downloaded && downloadingModel.size && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between text-xs text-gray-600">
-                    <span>
-                      已下载：
-                      {(downloadingModel.downloaded / 1024 / 1024).toFixed(1)}{" "}
-                      MB
-                    </span>
-                    <span>
-                      总计：{(downloadingModel.size / 1024 / 1024).toFixed(1)}{" "}
-                      MB
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {!downloadingModel.done && (
-                <div className="mt-6 flex justify-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-lg border-gray-300 text-gray-800 hover:bg-gray-50"
-                    onClick={() => downloadAbortRef.current?.abort()}
-                  >
-                    取消下载
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

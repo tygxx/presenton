@@ -56,6 +56,11 @@ def is_disable_auth_enabled():
     return _is_truthy(get_disable_auth_env())
 
 
+def is_presenton_electron_desktop():
+    """True when running inside the Presenton Electron desktop app."""
+    return _is_truthy(os.getenv("PRESENTON_ELECTRON"))
+
+
 def get_llm_provider_env():
     return os.getenv("LLM")
 
@@ -74,6 +79,18 @@ def get_ollama_url_env():
 
 def get_custom_llm_url_env():
     return os.getenv("CUSTOM_LLM_URL")
+
+
+def get_deepseek_base_url_env():
+    return os.getenv("DEEPSEEK_BASE_URL")
+
+
+def get_deepseek_api_key_env():
+    return os.getenv("DEEPSEEK_API_KEY")
+
+
+def get_deepseek_model_env():
+    return os.getenv("DEEPSEEK_MODEL")
 
 
 def get_openai_api_key_env():
